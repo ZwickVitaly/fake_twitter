@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title%}
+    {{ profile.name }}
+{% endblock %}
+
+{% block body %}
+    <h2>Name: {{profile.name}}</h2>
+    {% if is_followed != None %}
+        {% if is_followed == True %}
+        <button id="follower" type="button" aria-description="{{ request.url.path }}/follow" value="Follow"  onclick="deleteStuff(this, event)" >Unfollow</button>
+        {% elif is_followed == False %}
+        <button id="follower" type="button" aria-description="{{ request.url.path }}/follow" value="Unfollow"  onclick="postStuff(this, event)">Follow</button>
+        {% endif %}
+
+    {% endif %}
+    <div>
+        <h3>My tweets</h3>
+        <ul>
+        {% for tweet in tweets %}
+            <li>
+                {% if tweet.repost %}
+                <div>{{ tweet.repost.liked_by_user}}</div>
+                <div>{{ tweet.repost.content }}</div>
+                                <div>
+                        {% for image in tweet.repost.images %}
+                        <div style="display: inline-block"><img src="{{ image }}" alt="{{ image }}" width="300" height="300"></div>
+                        {% endfor %}
+                </div>
+                <div>
+                        {% if tweet.repost.liked_by_user == False %}
+                    <button id="reposted-{{ tweet.repost.uuid }}-likes" type="button" aria-description="/tweets/{{ tweet.repost.uuid }}/like" value="Unlike"  onclick="postStuff(this, event)">
+                        Like
+                    </button>
+                        {% elif tweet.repost.liked_by_user == True %}
+                    <button id="reposted-{{ tweet.repost.uuid }}-likes" type="button" aria-description="/tweets/{{ tweet.repost.uuid }}/like" value="Like"  onclick="deleteStuff(this, event)" >
+                        Unlike
+                    </button>
+                        {% endif %}
+                    likes: <div id="reposted-{{ tweet.repost.uuid }}-likes-counter" style="display: inline">{{ tweet.repost.likes }}</div>
+                </div>
+                <div>views: {{ tweet.repost.views }}</div>
+                <div>
+                        {% if tweet.repost.reposted_by_user == False %}
+                    <button id="reposted-{{ tweet.repost.uuid }}-reposts" type="button" aria-description="/tweets/{{ tweet.repost.uuid }}/repost" value="Undo repost"  onclick="postStuff(this, event)">
+                        Repost
+                    </button>
+                        {% elif tweet.repost.reposted_by_user == True %}
+                    <button id="reposted-{{ tweet.repost.uuid }}-reposts" type="button" aria-description="/tweets/{{ tweet.repost.uuid }}/repost" value="Repost"  onclick="deleteStuff(this, event)" >
+                        Undo repost
+                    </button>
+                        {% endif %}
+                    reposts: <div id="reposted-{{ tweet.repost.uuid }}-reposts-counter" style="display: inline">{{ tweet.repost.reposts }}</div>
+                </div>
+                <a href="{{ origin_url }}/{{ tweet.repost.author.uuid }}">{{ tweet.repost.author.name }}</a>
+                <div>{{ tweet.repost.created_at }}</div>
+                {% else %}
+                <div>{{ tweet.content }}</div>
+                <div>
+                    {% for image in tweet.images %}
+                <div style="display: inline-block"><img src="{{ image }}" alt="{{ image }}" width="300" height="300"></div>
+                    {% endfor %}
+                </div>
+                <div>
+                    {% if tweet.liked_by_user == False %}
+                    <button id="tweet-{{tweet.uuid}}-likes" type="button" aria-description="/tweets/{{ tweet.uuid }}/like" value="Unlike" onclick="postStuff(this, event)">
+                        Like
+                    </button>
+                    {% elif tweet.liked_by_user == True %}
+                    <button id="tweet-{{tweet.uuid}}-likes" type="button" aria-description="/tweets/{{ tweet.uuid }}/like" value="Like" onclick="deleteStuff(this, event)" >
+                        Unlike
+                    </button>
+                    {% endif %}
+                    likes: <div id="tweet-{{tweet.uuid}}-likes-counter" style="display: inline">{{ tweet.likes }}</div>
+                </div>
+                <div>views: {{ tweet.views }}</div>
+                <div>
+                    {% if tweet.author.uuid.__str__() == request.cookies.get("my_uuid") %}
+                        <button disabled="disabled">Repost</button>
+                    {% elif tweet.reposted_by_user == False %}
+                    <button id="reposted-{{ tweet.uuid }}-reposts" type="button" aria-description="/tweets/{{ tweet.uuid }}/repost" value="Undo repost"  onclick="postStuff(this, event)">
+                        Repost
+                    </button>
+                        {% elif tweet.reposted_by_user == True %}
+                    <button id="reposted-{{ tweet.uuid }}-reposts" type="button" aria-description="/tweets/{{ tweet.uuid }}/repost" value="Repost"  onclick="deleteStuff(this, event)" >
+                        Undo repost
+                    </button>
+                        {% endif %}
+                    reposts: <div id="reposted-{{ tweet.uuid }}-reposts-counter" style="display: inline">{{ tweet.reposts }}</div>
+                </div>
+                <div>{{ tweet.created_at }}</div>
+                {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+    <div>
+        <h3>My followers: </h3>
+        <div id="follower-counter">{{ followers.quantity }}</div>
+        <ul>
+        {% for user in followers.followers_list %}
+            <li>
+                <a href="{{ origin_url }}/{{ user.uuid }}">{{ user.name }}</a>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+    <div>
+        <h3>I follow: {{ followed.quantity }}</h3>
+        <ul>
+        {% for user in followed.followed_list %}
+            <li>
+                <a href="{{ origin_url }}/{{ user.uuid }}">{{ user.name }}</a>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+    <div>{{ likes }}</div>
+<script src="/static/js/post-delete.js" type="text/javascript">
+</script>
+{% endblock %}

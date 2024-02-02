@@ -8,16 +8,17 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class BaseRecipe(BaseModel):
+class GetMyProfile(BaseModel):
     """
     Base recipe schema
     """
 
     model_config = ConfigDict(from_attributes=True)
-    name: str = Field(
-        title="Recipe name",
+    result: bool = Field(
+        title="Result",
         examples=[
-            "Carbonara",
+            True,
+            False,
         ],
     )
     cook_time: int = Field(
@@ -28,62 +29,18 @@ class BaseRecipe(BaseModel):
     )
 
 
-class GetRecipeDetails(BaseModel):
-    """
-    Schema for recipe id validation
-    NOT IN USE AT THE MOMENT
-    """
-
-    model_config = ConfigDict(from_attributes=True)
-    id: int = Field(
-        title="Recipe id",
-        examples=[
-            1,
-        ],
+class NewTweetSchema(BaseModel):
+    tweet_data: str = Field(
+        title="Tweet content"
+    )
+    tweet_media: Optional[list[str]] = Field(
+        title="Tweet media links",
+        default=None
     )
 
 
-class RecipeNoDetailsOut(BaseRecipe, GetRecipeDetails):
-    """
-    Schema for no-detailed recipe response
-    """
-
-    views: int = Field(
-        title="Recipe views",
-        examples=[
-            0,
-        ],
+class DeleteTweetSchema(BaseModel):
+    uuid: str = Field(
+        title="Tweet or repost uuid"
     )
 
-
-class RecipeCreate(BaseRecipe):
-    """
-    Schema for recipe creation data validation
-    """
-
-    ingredients: str = Field(
-        title="Ingredients",
-        examples=[
-            "Racoon butt - 1kg, Cream - 300ml",
-        ],
-    )
-    description: Optional[str] = Field(
-        title="Description",
-        examples=["TASTY AF"],
-    )
-
-
-class RecipeDetailsOut(RecipeNoDetailsOut, RecipeCreate):
-    """
-    Schema for recipe details response
-    """
-
-    ...
-
-
-class Message(BaseModel):
-    """
-    Schema for "Not found" response
-    """
-
-    detail: str = Field()

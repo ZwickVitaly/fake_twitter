@@ -5,18 +5,17 @@
   <meta content="IE=edge" http-equiv="X-UA-Compatible">
   <meta content="width=device-width,initial-scale=1" name="viewport">
   <link href="favicon.ico" rel="icon" type="image/x-icon">
+     {% block links %}
+     {% endblock %}
   <title>
-   {% %}
+     {% block title %}
+      Base title
+     {% endblock %}
   </title>
  </head>
  <body>
- {% if not username %}
- <form action="login" method="post">
-     <input type="text" name="username">
-     <button type="submit">submit</button>
- </form>
- {% else %}
- <h1>Hello, {{username}}!</h1>
- {% endif %}
+    {% block body %}
+    <h1>Base body</h1>
+    {% endblock %}
  </body>
 </html>

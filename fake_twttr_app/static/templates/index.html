@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title%}
+Fake Twitter
+{% endblock %}
+
+{% block body %}
+ {% if not username %}
+ <form action="login" method="post">
+     <input type="text" name="username" placeholder="username">
+     <button type="submit">submit</button>
+ </form>
+ {% else %}
+ <h1>Hello, {{username}}!</h1>
+ {% endif %}
+{% endblock %}
