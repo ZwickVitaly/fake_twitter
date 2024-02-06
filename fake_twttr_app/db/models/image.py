@@ -1,11 +1,4 @@
-from sqlalchemy import (
-    Column,
-    ForeignKey,
-    String,
-    Uuid,
-    text,
-)
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy import Column, ForeignKey, Integer, String
 
 from fake_twttr_app.db.base import Base
 
@@ -13,8 +6,10 @@ from fake_twttr_app.db.base import Base
 class Image(Base):
     __tablename__ = "images"
 
-    uuid = Column(
-        Uuid(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    file_extension = Column(
+        String,
     )
-    tweet_uuid = Column(ForeignKey("tweets.uuid", ondelete="CASCADE"), nullable=False)
-    source = Column(ARRAY(String), nullable=False)
+    tweet_uuid = Column(
+        ForeignKey("tweets.uuid", ondelete="CASCADE"),
+    )

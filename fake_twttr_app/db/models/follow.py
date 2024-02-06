@@ -1,8 +1,6 @@
-from sqlalchemy import (
-    Column,
-    ForeignKey,
-    Uuid,
-)
+from sqlalchemy import Column, ForeignKey, Uuid, func
+from sqlalchemy.dialects.postgresql import TIMESTAMP
+
 from fake_twttr_app.db.base import Base
 
 
@@ -14,4 +12,7 @@ class Follow(Base):
     )
     follower_user = Column(
         Uuid, ForeignKey("users.uuid", ondelete="CASCADE"), primary_key=True
+    )
+    created_at = Column(
+        TIMESTAMP(timezone=True, precision=0), server_default=func.current_timestamp()
     )

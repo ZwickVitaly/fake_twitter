@@ -2,13 +2,13 @@ from typing import Any
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Column,
+    Index,
     String,
     Uuid,
     select,
     text,
-    Index,
-    CheckConstraint,
 )
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -16,15 +16,13 @@ from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import func
 
 from fake_twttr_app.db.base import Base, async_session
+
 from .tweet import Tweet
 
 
 class User(Base):
     __tablename__ = "users"
-    __table_args__ = (
-        CheckConstraint('char_length(name) > 2',
-                        name='name_min_length'),
-    )
+    __table_args__ = (CheckConstraint("char_length(name) > 2", name="name_min_length"),)
 
     uuid = Column(
         Uuid(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
@@ -43,7 +41,7 @@ class User(Base):
     )
     active = Column(Boolean, nullable=False, default=True)
     created_at = Column(
-        TIMESTAMP(timezone=True, precision=0), server_default=func.current_timestamp()
+        TIMESTAMP(timezone=True), server_default=func.current_timestamp()
     )
     index = Index(
         "unique_username",
@@ -108,19 +106,18 @@ class User(Base):
         return user.unique().scalar_one_or_none()
 
     @classmethod
-    async def get_user_by_uuid(cls, uuid):
+    async def get_user_by_uuid(cls, user_uuid):
+        if not isinstance(user_uuid, str):
+            return None
         async with async_session() as session:
+            user_filter = cls.uuid.cast(String).ilike(user_uuid)
             user = await session.execute(
-                select(cls).filter_by(uuid=uuid, active=True)
+                select(cls).filter(user_filter).filter_by(active=True)
             )
         return user.unique().scalar_one_or_none()
 
     @classmethod
     async def get_user_by_name(cls, name):
         async with async_session() as session:
-            user = await session.execute(
-                select(cls).filter_by(name=name, active=True)
-            )
+            user = await session.execute(select(cls).filter_by(name=name, active=True))
         return user.unique().scalar_one_or_none()
-
-

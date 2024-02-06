@@ -1,27 +1,49 @@
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+
 from .controllers import (
-    api_users_router,
+    api_admin_router,
+    api_follows_router,
+    api_likes_router,
+    api_medias_router,
+    api_reposts_router,
     api_tweets_router,
-    api_like_router,
-    login_router,
-    users_router,
-    likes_router,
-    reposts_router,
+    api_users_router,
 )
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
+from .folders import static, static_request_path
 from .lifespan import basic_lifespan
-
-
-static = StaticFiles(directory="fake_twttr_app/static")
-
+from .schemas import BadResultSchema, ValidationErrorResultSchema
 
 app = FastAPI(lifespan=basic_lifespan)
-app.include_router(api_users_router, prefix="/api")
-app.include_router(api_like_router, prefix="/api")
-app.include_router(api_tweets_router, prefix="/api")
-app.include_router(login_router, prefix="")
-app.include_router(users_router, prefix="")
-app.include_router(likes_router, prefix="")
-app.include_router(reposts_router, prefix="")
-app.mount(path="/static", app=static)
 
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content=ValidationErrorResultSchema(
+            error_type="ValidationError", error_msg=exc.errors()
+        ).model_dump(),
+    )
+
+
+@app.exception_handler(HTTPException)
+async def validation_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=400,
+        content=BadResultSchema(
+            error_type="Bad request", error_msg=exc.detail
+        ).model_dump(),
+    )
+
+
+app.include_router(api_users_router, prefix="/api")
+app.include_router(api_likes_router, prefix="/api")
+app.include_router(api_tweets_router, prefix="/api")
+app.include_router(api_reposts_router, prefix="/api")
+app.include_router(api_follows_router, prefix="/api")
+app.include_router(api_admin_router, prefix="/api")
+app.include_router(api_medias_router, prefix="/api")
+app.mount(path=static_request_path, app=static)

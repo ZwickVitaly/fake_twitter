@@ -1,12 +1,6 @@
 from typing import Any
 
-from sqlalchemy import (
-    Column,
-    ForeignKey,
-    Uuid,
-    text,
-    Index
-)
+from sqlalchemy import Column, ForeignKey, Index, Uuid, text
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -26,11 +20,7 @@ class Repost(Base):
         TIMESTAMP(timezone=True, precision=0), server_default=func.current_timestamp()
     )
 
-    unique_repost = Index(
-        "unique_repost_index",
-        tweet_uuid, user_uuid,
-        unique=True
-    )
+    unique_repost = Index("unique_repost_index", tweet_uuid, user_uuid, unique=True)
 
     user = relationship(
         "User",
@@ -51,6 +41,8 @@ class Repost(Base):
     async def to_safe_json(self, session_user_uuid: str | None = None):
         return {
             "uuid": self.uuid,
-            "repost": await self.reposted_tweet.to_safe_json(session_user_uuid=session_user_uuid),
-            "created_at": self.created_at
+            "repost": await self.reposted_tweet.to_safe_json(
+                session_user_uuid=session_user_uuid
+            ),
+            "created_at": self.created_at,
         }
