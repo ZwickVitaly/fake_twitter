@@ -93,3 +93,5 @@ venv/
 .database
 instace/
 database/
+# Application media
+media/

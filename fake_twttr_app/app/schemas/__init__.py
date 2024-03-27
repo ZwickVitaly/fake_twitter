@@ -3,8 +3,7 @@ from .profile import ProfileResultSchema
 from .repost import RepostOutSchema
 from .result import (
     BadResultSchema,
-    BadUuidResponse,
-    DefaultResult,
+    DefaultPositiveResult,
     IntegrityErrorResponse,
     NotFoundErrorResponse,
     ResultFeedSchema,
@@ -27,7 +26,7 @@ __all__ = [
     "CreatedUserSchema",
     "ProfileResultSchema",
     "BadResultSchema",
-    "DefaultResult",
+    "DefaultPositiveResult",
     "ResultFeedSchema",
     "ResultTweetSchema",
     "NotFoundErrorResponse",
@@ -36,5 +35,4 @@ __all__ = [
     "ResultTweetCreationSchema",
     "ValidationErrorResultSchema",
     "IntegrityErrorResponse",
-    "BadUuidResponse",
 ]

@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import Column, ForeignKey, Integer, String, Uuid, select, text
+from sqlalchemy import Column, ForeignKey, Integer, String, select
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
@@ -16,12 +16,10 @@ from .repost import Repost
 class Tweet(Base):
     __tablename__ = "tweets"
 
-    uuid = Column(
-        Uuid(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
-    )
+    id = Column(Integer, primary_key=True)
     content = Column(String(280), nullable=False)
     views = Column(Integer, nullable=False, default=0)
-    user_uuid = Column(ForeignKey("users.uuid", ondelete="CASCADE"), nullable=False)
+    user_id = Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(
         TIMESTAMP(timezone=True, precision=0), server_default=func.current_timestamp()
     )
@@ -40,7 +38,7 @@ class Tweet(Base):
         cascade="all, delete-orphan",
     )
     tweet_author = relationship(
-        "User", back_populates="tweets", lazy="selectin", foreign_keys="Tweet.user_uuid"
+        "User", back_populates="tweets", lazy="selectin", foreign_keys="Tweet.user_id"
     )
     images_objects = relationship(
         "Image",
@@ -57,10 +55,10 @@ class Tweet(Base):
         )
 
     async def to_safe_json(
-        self, session_user_uuid: str | None = None
+        self, session_user_id: int | None = None
     ) -> dict[str, Any]:
         result = {
-            "uuid": self.uuid,
+            "id": self.id,
             "author": await self.tweet_author.to_safe_json(),
             "content": self.content,
             "views": self.views,
@@ -72,34 +70,34 @@ class Tweet(Base):
             ],
             "created_at": self.created_at,
         }
-        if session_user_uuid:
+        if session_user_id:
             html_extra = {
                 "liked_by_user": await self.done_by_user(
-                    user_uuid=session_user_uuid, search_type="Like"
+                    user_id=session_user_id, search_type="Like"
                 ),
                 "reposted_by_user": await self.done_by_user(
-                    user_uuid=session_user_uuid, search_type="Repost"
+                    user_id=session_user_id, search_type="Repost"
                 ),
             }
             result.update(html_extra)
         return result
 
     async def done_by_user(
-        self, user_uuid: str | None = None, search_type: str | None = None
+        self, user_id: int | None = None, search_type: str | None = None
     ):
-        if user_uuid is None or search_type is None:
+        if user_id is None or search_type is None:
             return None
         search_types = {"Like": Like, "Repost": Repost}
         if search_type not in search_types:
             raise ValueError("Wrong type")
         async with async_session() as session:
             search_filter = (
-                search_types[search_type].user_uuid.cast(String).ilike(user_uuid)
+                search_types[search_type].user_id.ilike(user_id)
             )
             user = await session.execute(
                 select(search_types[search_type])
                 .filter(search_filter)
-                .filter_by(tweet_uuid=self.uuid)
+                .filter_by(tweet_id=self.id)
             )
         return user.unique().scalar_one_or_none() is not None
 

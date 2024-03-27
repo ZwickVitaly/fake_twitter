@@ -11,5 +11,5 @@ class Image(Base):
         String,
     )
     tweet_uuid = Column(
-        ForeignKey("tweets.uuid", ondelete="CASCADE"),
+        ForeignKey("tweets.id", ondelete="CASCADE"),
     )

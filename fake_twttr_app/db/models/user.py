@@ -6,7 +6,7 @@ from sqlalchemy import (
     Column,
     Index,
     String,
-    Uuid,
+    Integer,
     select,
     text,
 )
@@ -24,9 +24,7 @@ class User(Base):
     __tablename__ = "users"
     __table_args__ = (CheckConstraint("char_length(name) > 2", name="name_min_length"),)
 
-    uuid = Column(
-        Uuid(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
-    )
+    id = Column(Integer, primary_key=True)
     name = Column(
         String(
             50,
@@ -52,8 +50,8 @@ class User(Base):
     followed = relationship(
         "User",
         secondary="follows",
-        primaryjoin="Follow.follower_user == User.uuid",
-        secondaryjoin="Follow.followed_user == User.uuid",
+        primaryjoin="Follow.follower_user == User.id",
+        secondaryjoin="Follow.followed_user == User.id",
         backref=backref("followers", lazy="joined"),
         lazy="selectin",
     )
@@ -61,7 +59,7 @@ class User(Base):
         "Tweet",
         lazy="joined",
         cascade="all, delete-orphan",
-        foreign_keys="Tweet.user_uuid",
+        foreign_keys="Tweet.user_id",
         back_populates="tweet_author",
         order_by=lambda: Tweet.__table__.columns.created_at.desc(),
     )
@@ -70,7 +68,7 @@ class User(Base):
         "Like",
         lazy="noload",
         cascade="all, delete-orphan",
-        foreign_keys="Like.user_uuid",
+        foreign_keys="Like.user_id",
     )
     user_tweet_repost = relationship(
         "Repost",
@@ -93,7 +91,7 @@ class User(Base):
 
     async def to_safe_json(self):
         return {
-            "uuid": self.uuid,
+            "id": self.id,
             "name": self.name,
         }
 
@@ -106,11 +104,11 @@ class User(Base):
         return user.unique().scalar_one_or_none()
 
     @classmethod
-    async def get_user_by_uuid(cls, user_uuid):
-        if not isinstance(user_uuid, str):
+    async def get_user_by_id(cls, user_id):
+        if not isinstance(user_id, str):
             return None
         async with async_session() as session:
-            user_filter = cls.uuid.cast(String).ilike(user_uuid)
+            user_filter = cls.id.cast(String).ilike(user_id)
             user = await session.execute(
                 select(cls).filter(user_filter).filter_by(active=True)
             )

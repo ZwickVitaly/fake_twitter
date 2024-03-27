@@ -1,5 +1,4 @@
 from datetime import datetime
-from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -7,19 +6,19 @@ from .tweet import TweetOutSchema
 
 
 class RepostOutSchema(BaseModel):
-    uuid: UUID | str = Field(
-        title="Repost uuid",
+    id: int = Field(
+        title="Repost id",
         examples=[
-            "58977674-4581-4d26-b862-2bf4c2b23a49",
+            1, 2, 3
         ],
     )
     repost: TweetOutSchema = Field(
         title="Reposted tweet",
         examples=[
             {
-                "uuid": "58977674-4581-4d26-b862-2bf4c2b23a49",
+                "id": 3,
                 "author": {
-                    "uuid": "205bc500-c348-47ad-984c-7ab9c16633ae",
+                    "id": 2,
                     "name": "lol",
                 },
                 "content": "Later, alligator",

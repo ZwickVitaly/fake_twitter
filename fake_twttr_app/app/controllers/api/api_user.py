@@ -16,7 +16,7 @@ api_users_router = APIRouter(prefix="/users", tags=["users"])
 
 
 @api_users_router.get(
-    "/{user_uuid:str}",
+    "/{user_id:str}",
     responses={
         200: {"model": ProfileResultSchema},
         404: {"model": BadResultSchema},
@@ -25,9 +25,9 @@ api_users_router = APIRouter(prefix="/users", tags=["users"])
 )
 @api_users_router.get("/me", response_model=ProfileResultSchema)
 @auth_required_header
-async def get_my_info_handler(request: Request, user_uuid: Optional[str] = None):
-    if user_uuid:
-        key = User.uuid.cast(String).ilike(user_uuid)
+async def get_my_info_handler(request: Request, user_id: Optional[int] = None):
+    if user_id:
+        key = User.id.ilike(user_id)
     else:
         key = User.api_key.ilike(request.headers.get(api_key_keyword))
     async with async_session() as session:
@@ -66,7 +66,7 @@ async def get_my_info_handler(request: Request, user_uuid: Optional[str] = None)
             result.update(
                 {
                     "tweets": tweets,
-                    "followed": my_followed,
+                    "following": my_followed,
                     "followers": my_followers,
                 }
             )

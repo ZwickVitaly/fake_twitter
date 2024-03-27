@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Optional
-from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -16,15 +15,15 @@ class NewTweetSchema(BaseModel):
 
 
 class TweetOutSchema(BaseModel):
-    uuid: UUID | str = Field(
-        title="Tweet uuid",
-        examples=["bdd7e8c8-f65c-4978-9c70-95ec39b13f9d"],
+    id: int = Field(
+        title="Tweet id",
+        examples=[1, 2, 22],
     )
     author: UserBaseOutSchema = Field(
         title="User's info",
         examples=[
             {
-                "uuid": "bdd7e8c8-f65c-4978-9c70-95ec39b13f9d",
+                "id": 1,
                 "name": "John",
             },
         ],
@@ -64,9 +63,9 @@ class FeedOutSchema(BaseModel):
         examples=[
             [
                 {
-                    "uuid": "58977674-4581-4d26-b862-2bf4c2b23a49",
+                    "id": 1,
                     "author": {
-                        "uuid": "205bc500-c348-47ad-984c-7ab9c16633ae",
+                        "id": 4,
                         "name": "lol",
                     },
                     "content": "Later, alligator",
@@ -77,16 +76,16 @@ class FeedOutSchema(BaseModel):
                     "created_at": "2024-02-04T09:30:14+00:00",
                 },
                 {
-                    "uuid": "58977674-4581-4d26-b862-2bf4c2b23a49",
+                    "id": 2,
                     "author": {
-                        "uuid": "205bc500-c348-47ad-984c-7ab9c16633ae",
+                        "id": 3,
                         "name": "lol",
                     },
-                    "content": "Lol kek azazaza",
+                    "content": "Lol kek",
                     "views": 1,
                     "likes": 1,
                     "reposts": 1,
-                    "images": ["1", "2"],
+                    "images": [1, 2],
                     "created_at": "2024-02-04T09:30:14+00:00",
                 },
             ]

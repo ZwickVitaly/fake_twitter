@@ -10,13 +10,12 @@ from fake_twttr_app.app.folders import media_path
 from fake_twttr_app.app.keywords import api_key_keyword
 from fake_twttr_app.app.schemas import (
     BadResultSchema,
-    DefaultResult,
+    DefaultPositiveResult,
     NewTweetSchema,
     NotFoundErrorResponse,
     ResultFeedSchema,
     ResultTweetCreationSchema,
     ResultTweetSchema,
-    TweetOutSchema,
     FeedOutSchema,
     UnAuthorizedErrorResponse,
     ValidationErrorResultSchema,
@@ -66,8 +65,8 @@ async def get_personal_feed_handler(request: Request):
             q = await session.execute(
                 select(Tweet)
                 .join(User)
-                .join(Follow, User.uuid == Follow.followed_user)
-                .filter_by(follower_user=user.uuid)
+                .join(Follow, User.id == Follow.followed_user)
+                .filter_by(follower_user=user.id)
                 .order_by(Tweet.views.desc())
                 .order_by(Tweet.created_at.desc())
             )
@@ -78,7 +77,7 @@ async def get_personal_feed_handler(request: Request):
 
 
 @api_tweets_router.get(
-    "/{tweet_uuid:str}",
+    "/{tweet_id:int}",
     responses={
         200: {"model": ResultTweetSchema},
         401: {"model": BadResultSchema},
@@ -87,10 +86,10 @@ async def get_personal_feed_handler(request: Request):
     },
 )
 @auth_required_header
-async def get_tweet_handler(request: Request, tweet_uuid: str):
+async def get_tweet_handler(request: Request, tweet_id: int):
     async with async_session() as session:
         async with session.begin():
-            tweets_filter = Tweet.uuid.cast(String).ilike(tweet_uuid)
+            tweets_filter = Tweet.id.ilike(tweet_id)
             await session.execute(
                 update(Tweet).where(tweets_filter).values(views=Tweet.views + 1)
             )
@@ -118,10 +117,10 @@ async def get_tweet_handler(request: Request, tweet_uuid: str):
 async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
     async with async_session() as session:
         async with session.begin():
-            user_uuid = (
+            user_id = (
                 await User.get_user_by_api_token(request.headers.get(api_key_keyword))
-            ).uuid
-            new_tweet = Tweet(content=new_tweet_data.tweet_data, user_uuid=user_uuid)
+            ).id
+            new_tweet = Tweet(content=new_tweet_data.tweet_data, user_id=user_id)
             session.add(new_tweet)
             if new_tweet_data.tweet_media:
                 for image_id in new_tweet_data.tweet_media:
@@ -137,30 +136,30 @@ async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
                     await session.execute(
                         update(Image)
                         .where(Image.id == image_id)
-                        .values(tweet_uuid=new_tweet.uuid)
+                        .values(tweet_id=new_tweet.id)
                     )
             await session.commit()
 
-    return ResultTweetCreationSchema(tweet_uuid=new_tweet.uuid)
+    return ResultTweetCreationSchema(tweet_id=new_tweet.id)
 
 
 @api_tweets_router.delete(
-    "/{tweet_uuid:str}",
+    "/{tweet_id:int}",
     responses={
-        200: {"model": DefaultResult},
+        200: {"model": DefaultPositiveResult},
         401: {"model": BadResultSchema},
         403: {"model": BadResultSchema},
         404: {"model": BadResultSchema},
     },
 )
 @auth_required_header
-async def delete_tweet_handler(request: Request, tweet_uuid: str):
+async def delete_tweet_handler(request: Request, tweet_id: int):
     async with async_session() as session:
         async with session.begin():
-            tweets_filter = Tweet.uuid.cast(String).ilike(tweet_uuid)
-            user_uuid = (
+            tweets_filter = Tweet.id.ilike(tweet_id)
+            user_id = (
                 await User.get_user_by_api_token(request.headers.get(api_key_keyword))
-            ).uuid
+            ).id
             deleted_tweet = (
                 (await session.execute(select(Tweet).filter(tweets_filter)))
                 .unique()
@@ -171,7 +170,7 @@ async def delete_tweet_handler(request: Request, tweet_uuid: str):
                     status_code=404,
                     content=NotFoundErrorResponse("Tweet is not found").to_json(),
                 )
-            elif deleted_tweet.tweet_author.uuid != user_uuid:
+            elif deleted_tweet.tweet_author.id != user_id:
                 return JSONResponse(
                     status_code=403,
                     content=UnAuthorizedErrorResponse(
@@ -185,4 +184,4 @@ async def delete_tweet_handler(request: Request, tweet_uuid: str):
                 os_remove(removed_image_path)
             await session.delete(deleted_tweet)
             await session.commit()
-    return DefaultResult()
+    return DefaultPositiveResult()

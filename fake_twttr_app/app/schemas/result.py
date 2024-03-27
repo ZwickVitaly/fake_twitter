@@ -1,12 +1,11 @@
 from dataclasses import dataclass
-from uuid import UUID
 
 from pydantic import BaseModel, Field
 
 from .tweet import FeedOutSchema, TweetOutSchema
 
 
-class DefaultResult(BaseModel):
+class DefaultPositiveResult(BaseModel):
     """
     Default successful result schema. Used for inheritance and simple response like {"result": true}
     """
@@ -16,19 +15,19 @@ class DefaultResult(BaseModel):
     )
 
 
-class ResultMediaSchema(DefaultResult):
+class ResultMediaSchema(DefaultPositiveResult):
     """Schema for successful result response adding media_id"""
 
-    media_id: int = Field(examples=[1, 2, 45])
+    media_ids: list[int] = Field(examples=[[1], [2, 45]])
 
 
-class ResultTweetCreationSchema(DefaultResult):
-    """Schema for successful result response adding tweet_uuid"""
+class ResultTweetCreationSchema(DefaultPositiveResult):
+    """Schema for successful result response adding tweet_id"""
 
-    tweet_uuid: str | UUID
+    tweet_id: int
 
 
-class ResultFeedSchema(DefaultResult):
+class ResultFeedSchema(DefaultPositiveResult):
     """Schema for successful result response adding feed (tweets list)"""
 
     tweets: FeedOutSchema
@@ -40,13 +39,13 @@ class ResultTweetSchema(ResultFeedSchema):
     tweet: TweetOutSchema
 
 
-class BadResultSchema(DefaultResult):
+class BadResultSchema(DefaultPositiveResult):
     result: bool = Field(default=False)
     error_type: str
     error_msg: str | list[dict]
 
 
-class ValidationErrorResultSchema(DefaultResult):
+class ValidationErrorResultSchema(DefaultPositiveResult):
     result: bool = Field(default=False)
     error_type: str
     error_msg: list[dict]
@@ -74,16 +73,6 @@ class ErrorResponse:
             "error_type": self.error_type,
             "error_msg": self.error_msg,
         }
-
-
-class BadUuidResponse(ErrorResponse):
-    def __init__(
-        self,
-        result: bool = False,
-        error_type: str = "ValueError",
-        error_msg: str = "Bad uuid",
-    ):
-        super().__init__(result=result, error_type=error_type, error_msg=error_msg)
 
 
 class IntegrityErrorResponse(ErrorResponse):

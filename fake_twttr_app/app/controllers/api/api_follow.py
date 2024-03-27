@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import delete
@@ -9,8 +7,7 @@ from fake_twttr_app.app.auth_wrappers import auth_required_header
 from fake_twttr_app.app.keywords import api_key_keyword
 from fake_twttr_app.app.schemas import (
     BadResultSchema,
-    BadUuidResponse,
-    DefaultResult,
+    DefaultPositiveResult,
     IntegrityErrorResponse,
     ValidationErrorResultSchema,
 )
@@ -18,14 +15,14 @@ from fake_twttr_app.db import Follow, User
 from fake_twttr_app.db.base import async_session
 
 api_follows_router = APIRouter(
-    prefix="/users/{followed_uuid:str}/follow", tags=["follows"]
+    prefix="/users/{followed_id:int}/follow", tags=["follows"]
 )
 
 
 @api_follows_router.post(
     "",
     responses={
-        200: {"model": DefaultResult},
+        200: {"model": DefaultPositiveResult},
         401: {"model": BadResultSchema},
         403: {"model": BadResultSchema},
         404: {"model": BadResultSchema},
@@ -33,13 +30,13 @@ api_follows_router = APIRouter(
     },
 )
 @auth_required_header
-async def post_follow_handler(request: Request, followed_uuid: str):
+async def post_follow_handler(request: Request, followed_id: int):
     async with async_session() as session:
         async with session.begin():
-            user_uuid = (
+            user_id = (
                 await User.get_user_by_api_token(request.headers.get(api_key_keyword))
-            ).uuid
-            if str(user_uuid) == followed_uuid:
+            ).id
+            if user_id == followed_id:
                 return JSONResponse(
                     status_code=409,
                     content=IntegrityErrorResponse(
@@ -48,14 +45,10 @@ async def post_follow_handler(request: Request, followed_uuid: str):
                 )
             try:
                 new_follow = Follow(
-                    follower_user=user_uuid, followed_user=UUID(followed_uuid)
+                    follower_user=user_id, followed_user=followed_id
                 )
                 session.add(new_follow)
                 await session.commit()
-            except ValueError:
-                return JSONResponse(
-                    status_code=422, content=BadUuidResponse().to_json()
-                )
             except IntegrityError as e:
                 if e.orig.pgcode == "23503":
                     return JSONResponse(
@@ -70,33 +63,28 @@ async def post_follow_handler(request: Request, followed_uuid: str):
                         ).to_json(),
                     )
 
-    return DefaultResult()
+    return DefaultPositiveResult()
 
 
 @api_follows_router.delete(
     "",
     responses={
-        200: {"model": DefaultResult},
+        200: {"model": DefaultPositiveResult},
         401: {"model": BadResultSchema},
         422: {"model": ValidationErrorResultSchema},
     },
 )
 @auth_required_header
-async def delete_follow_handler(request: Request, followed_uuid: str):
+async def delete_follow_handler(request: Request, followed_id: int):
     async with async_session() as session:
         async with session.begin():
-            user_uuid = (
+            user_id = (
                 await User.get_user_by_api_token(request.headers.get(api_key_keyword))
-            ).uuid
-            try:
-                like_q = delete(Follow).filter_by(
-                    follower_user=user_uuid, followed_user=UUID(followed_uuid)
-                )
-                await session.execute(like_q)
-                await session.commit()
-            except ValueError:
-                return JSONResponse(
-                    status_code=422, content=BadUuidResponse().to_json()
-                )
+            ).id
+            like_q = delete(Follow).filter_by(
+                follower_user=user_id, followed_user=followed_id
+            )
+            await session.execute(like_q)
+            await session.commit()
 
-    return DefaultResult()
+    return DefaultPositiveResult()

@@ -1,13 +1,12 @@
 from typing import Optional
-from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from .result import DefaultResult
+from .result import DefaultPositiveResult
 
 
 class NewUserDataSchema(BaseModel):
-    uuid: Optional[UUID] = Field(title="User's uuid", default=None)
+    id: Optional[int] = Field(title="User's id", default=None)
     name: str = Field(
         title="User's name",
         examples=["John", "Vasya"],
@@ -31,5 +30,5 @@ class AdminSchema(BaseModel):
     new_user_data: NewUserDataSchema = Field(title="New user's data")
 
 
-class CreatedUserSchema(DefaultResult):
+class CreatedUserSchema(DefaultPositiveResult):
     created_user_data: NewUserDataSchema = Field(title="Newly created user's data")

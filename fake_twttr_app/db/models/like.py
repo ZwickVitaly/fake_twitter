@@ -10,8 +10,8 @@ from fake_twttr_app.db.base import Base
 class Like(Base):
     __tablename__ = "likes"
 
-    tweet_uuid = Column(ForeignKey("tweets.uuid"), nullable=False, primary_key=True)
-    user_uuid = Column(ForeignKey("users.uuid"), nullable=False, primary_key=True)
+    tweet_id = Column(ForeignKey("tweets.id"), nullable=False, primary_key=True)
+    user_id = Column(ForeignKey("users.id"), nullable=False, primary_key=True)
     created_at = Column(
         TIMESTAMP(timezone=True, precision=0), server_default=func.current_timestamp()
     )
