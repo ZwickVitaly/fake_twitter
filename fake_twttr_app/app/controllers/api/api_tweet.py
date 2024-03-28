@@ -22,6 +22,9 @@ from fake_twttr_app.app.schemas import (
 )
 from fake_twttr_app.db import Follow, Image, Tweet, User
 from fake_twttr_app.db.base import async_session
+import logging
+
+logger = logging.getLogger("uvicorn")
 
 api_tweets_router = APIRouter(prefix="/tweets", tags=["tweets"])
 
@@ -43,8 +46,8 @@ async def get_feed_handler(request: Request):
                 .order_by(Tweet.created_at.desc())
             )
             tweets = q.scalars().unique().all()
-            tweet_list = [await t.to_safe_json() for t in tweets]
-            tweet_list.sort(key=lambda x: x["likes"], reverse=True)
+            tweet_list = [await tweet.to_safe_json() for tweet in tweets]
+            tweet_list.sort(key=lambda x: x["created_at"], reverse=True)
             return FeedOutSchema(tweets=tweet_list)
 
 
@@ -117,15 +120,21 @@ async def get_tweet_handler(request: Request, tweet_id: int):
 async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
     async with async_session() as session:
         async with session.begin():
+            logger.info("Posting tweet")
             user_id = (
                 await User.get_user_by_api_token(request.headers.get(api_key_keyword))
             ).id
+            logger.info("Found user")
             new_tweet = Tweet(content=new_tweet_data.tweet_data, user_id=user_id)
+            logger.info("Created new tweet")
             session.add(new_tweet)
-            if new_tweet_data.tweet_media:
-                for image_id in new_tweet_data.tweet_media:
+            if new_tweet_data.tweet_media_ids:
+                logger.info("Media ids in new tweet data")
+                for image_id in new_tweet_data.tweet_media_ids:
+                    logger.info("Searching for image in db")
                     image = await session.execute(select(Image).filter_by(id=image_id))
                     if not image.scalar_one_or_none():
+                        logger.info("Not found image")
                         await session.close()
                         return JSONResponse(
                             status_code=422,
@@ -133,12 +142,15 @@ async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
                                 f"Image id={image_id} is not downloaded yet"
                             ).to_json(),
                         )
+                    logger.info("Found image in db")
                     await session.execute(
                         update(Image)
                         .where(Image.id == image_id)
                         .values(tweet_id=new_tweet.id)
                     )
+                    logger.info("Updated image's tweet id")
             await session.commit()
+            logger.info("transaction complete")
 
     return ResultTweetCreationSchema(tweet_id=new_tweet.id)
 
@@ -156,12 +168,11 @@ async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
 async def delete_tweet_handler(request: Request, tweet_id: int):
     async with async_session() as session:
         async with session.begin():
-            tweets_filter = Tweet.id.ilike(tweet_id)
             user_id = (
                 await User.get_user_by_api_token(request.headers.get(api_key_keyword))
             ).id
             deleted_tweet = (
-                (await session.execute(select(Tweet).filter(tweets_filter)))
+                (await session.execute(select(Tweet).filter_by(id=tweet_id)))
                 .unique()
                 .scalar_one_or_none()
             )

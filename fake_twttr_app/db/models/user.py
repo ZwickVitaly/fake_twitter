@@ -66,6 +66,7 @@ class User(Base):
 
     user_likes = relationship(
         "Like",
+        back_populates='user',
         lazy="noload",
         cascade="all, delete-orphan",
         foreign_keys="Like.user_id",

@@ -10,6 +10,6 @@ class Image(Base):
     file_extension = Column(
         String,
     )
-    tweet_uuid = Column(
+    tweet_id = Column(
         ForeignKey("tweets.id", ondelete="CASCADE"),
     )

@@ -18,7 +18,7 @@ class DefaultPositiveResult(BaseModel):
 class ResultMediaSchema(DefaultPositiveResult):
     """Schema for successful result response adding media_id"""
 
-    media_ids: list[int] = Field(examples=[[1], [2, 45]])
+    media_id: int = Field(examples=[1, 2, 45])
 
 
 class ResultTweetCreationSchema(DefaultPositiveResult):

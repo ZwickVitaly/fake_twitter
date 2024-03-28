@@ -15,6 +15,7 @@ from .result import (
 )
 from .tweet import FeedOutSchema, NewTweetSchema, TweetOutSchema
 from .user import UserBaseOutSchema
+from .upload_file import FileSizeValidator, FileExtensionValidator
 
 __all__ = [
     "NewTweetSchema",
@@ -35,4 +36,6 @@ __all__ = [
     "ResultTweetCreationSchema",
     "ValidationErrorResultSchema",
     "IntegrityErrorResponse",
+    "FileSizeValidator",
+    "FileExtensionValidator",
 ]

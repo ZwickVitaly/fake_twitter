@@ -62,9 +62,9 @@ class Tweet(Base):
             "author": await self.tweet_author.to_safe_json(),
             "content": self.content,
             "views": self.views,
-            "likes": self.likes_count,
+            "likes": [await like.user.to_safe_json() for like in self.tweet_likes],
             "reposts": self.reposts_count,
-            "images": [
+            "attachments": [
                 f"{static_request_path}/{image.id}{image.file_extension}"
                 for image in self.images_objects
             ],

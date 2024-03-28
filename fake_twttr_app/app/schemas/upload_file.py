@@ -37,19 +37,17 @@ class FileExtensionValidator:
         if message is not None:
             self.message = message
 
-    def __call__(self, files: list[UploadFile]):
-        self.validate(files)
+    def __call__(self, file: UploadFile):
+        self.validate(file)
 
-    def validate(self, files: list[UploadFile]):
-        filenames = [Path(file.filename) for file in files]
-        for filename in filenames:
-            extension = filename.suffix.lower()
-            if filename.suffix.lower() not in self.allowed_extensions:
-                detail = self.message.format(
-                    extension=extension,
-                    allowed_extensions=", ".join(self.allowed_extensions),
-                )
-                raise HTTPException(status_code=400, detail=detail)
+    def validate(self, file: UploadFile):
+        extension = Path(file.filename).suffix.lower()
+        if extension not in self.allowed_extensions:
+            detail = self.message.format(
+                extension=extension,
+                allowed_extensions=", ".join(self.allowed_extensions),
+            )
+            raise HTTPException(status_code=400, detail=detail)
 
 
 class FileSizeValidator:
@@ -58,10 +56,9 @@ class FileSizeValidator:
     def __init__(self, max_mb: int):
         self.max_mb = max_mb
 
-    def __call__(self, files: list[UploadFile]):
-        self.validate(files)
+    def __call__(self, file: UploadFile):
+        self.validate(file)
 
-    def validate(self, files: list[UploadFile]):
-        for file in files:
-            if file.size / 1024 / 1024 > self.max_mb:
-                raise HTTPException(400, detail=self.message.format(max_mb=self.max_mb))
+    def validate(self, file: UploadFile):
+        if file.size / 1024 / 1024 > self.max_mb:
+            raise HTTPException(400, detail=self.message.format(max_mb=self.max_mb))

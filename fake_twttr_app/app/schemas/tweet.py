@@ -11,7 +11,7 @@ class NewTweetSchema(BaseModel):
         title="Tweet content",
         examples=["Biden go Texas!", "I might been underestimating my sleep time"],
     )
-    tweet_media: Optional[list[int]] = Field(title="Tweet media links", default=None)
+    tweet_media_ids: Optional[list[int]] = Field(title="Tweet media ids", default=None)
 
 
 class TweetOutSchema(BaseModel):
@@ -35,26 +35,26 @@ class TweetOutSchema(BaseModel):
             "Sleepy Joe strikes(sleeps) again!",
         ],
     )
-    views: int = Field(
-        title="Tweet's views",
-        examples=[0, 1, 2, 3],
-    )
-    likes: int = Field(
+    # views: int = Field(
+    #     title="Tweet's views",
+    #     examples=[0, 1, 2, 3],
+    # )
+    likes: list[UserBaseOutSchema] = Field(
         title="Tweet's likes",
-        examples=[0, 1, 2, 3],
+        examples=[[{"id": 1, "name": "John"}, {"id": 2, "name": "Jane"}], ],
     )
-    reposts: int = Field(
-        title="Tweet's reposts",
-        examples=[0, 1, 2, 3],
-    )
-    images: list[str] = Field(
+    # reposts: int = Field(
+    #     title="Tweet's reposts",
+    #     examples=[0, 1, 2, 3],
+    # )
+    attachments: list[str] = Field(
         title="List of tweet's images ids",
-        examples=[1, 2, 35],
+        examples=["/static/1.jpeg"],
     )
-    created_at: datetime = Field(
-        title="Time of tweet creation",
-        examples=[datetime.now()],
-    )
+    # created_at: datetime = Field(
+    #     title="Time of tweet creation",
+    #     examples=[datetime.now()],
+    # )
 
 
 class FeedOutSchema(BaseModel):
@@ -69,11 +69,11 @@ class FeedOutSchema(BaseModel):
                         "name": "lol",
                     },
                     "content": "Later, alligator",
-                    "views": 0,
-                    "likes": 0,
-                    "reposts": 0,
-                    "images": [],
-                    "created_at": "2024-02-04T09:30:14+00:00",
+                    # "views": 0,
+                    "likes": [{"id": 2, "name": "Jane"}],
+                    # "reposts": 0,
+                    "attachments": [],
+                    # "created_at": "2024-02-04T09:30:14+00:00",
                 },
                 {
                     "id": 2,
@@ -82,11 +82,11 @@ class FeedOutSchema(BaseModel):
                         "name": "lol",
                     },
                     "content": "Lol kek",
-                    "views": 1,
-                    "likes": 1,
-                    "reposts": 1,
-                    "images": [1, 2],
-                    "created_at": "2024-02-04T09:30:14+00:00",
+                    # "views": 1,
+                    "likes": [{"id": 1, "name": "John"}],
+                    # "reposts": 1,
+                    "attachments": [1, 2],
+                    # "created_at": "2024-02-04T09:30:14+00:00",
                 },
             ]
         ],

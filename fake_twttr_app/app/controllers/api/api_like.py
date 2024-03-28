@@ -13,7 +13,7 @@ from fake_twttr_app.app.schemas import (
 )
 from fake_twttr_app.db import Like, User, async_session
 
-api_likes_router = APIRouter(prefix="/tweets/{tweet_id:int}/like", tags=["likes"])
+api_likes_router = APIRouter(prefix="/tweets/{tweet_id:int}/likes", tags=["likes"])
 
 
 @api_likes_router.post(
