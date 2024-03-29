@@ -1,3 +1,8 @@
+"""
+Endpoints for getting user's info
+"""
+
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Request
@@ -6,12 +11,15 @@ from sqlalchemy import Result, select
 from sqlalchemy.orm import selectinload
 
 from fake_twttr_app.app.auth_wrappers import auth_required_header
-from fake_twttr_app.app.keywords import api_key_keyword
+from fake_twttr_app.app.config import api_key_keyword, logger_name
 from fake_twttr_app.app.schemas import ProfileResultSchema, BadResultSchema, ValidationErrorResultSchema
 from fake_twttr_app.db import Tweet, User, Like
 from fake_twttr_app.db.base import async_session
 
+
 api_users_router = APIRouter(prefix="/users", tags=["users"])
+
+logger = logging.getLogger(logger_name)
 
 
 @api_users_router.get(
@@ -35,8 +43,10 @@ api_users_router = APIRouter(prefix="/users", tags=["users"])
 @auth_required_header
 async def get_my_info_handler(request: Request, user_id: Optional[int] = None):
     if user_id:
+        logger.debug(f"Requesting User: User.id={user_id}")
         key = (User.id == user_id)
     else:
+        logger.debug("Self info request")
         key = User.api_key.ilike(request.headers.get(api_key_keyword))
     async with async_session() as session:
         async with session.begin():
@@ -54,6 +64,7 @@ async def get_my_info_handler(request: Request, user_id: Optional[int] = None):
             )
             user: User | None = query.unique().scalar_one_or_none()
             if not user:
+                logger.debug(f"User.id={user_id} not found")
                 return JSONResponse(
                     status_code=404,
                     content={
@@ -62,13 +73,14 @@ async def get_my_info_handler(request: Request, user_id: Optional[int] = None):
                         "error_msg": "User is not found",
                     },
                 )
-            my_reposts = [
-                await repost.to_safe_json() for repost in user.user_tweet_repost
-            ]
+
+            my_reposts = [await repost.to_safe_json() for repost in user.user_tweet_repost]
             tweets = [await tweet.to_safe_json() for tweet in user.tweets]
             my_followed = [await user.to_safe_json() for user in user.followed]
             my_followers = [await user.to_safe_json() for user in user.followers]
+
             result = await user.to_safe_json()
+
             tweets.extend(my_reposts)
             tweets.sort(key=lambda x: x.get("created_at"), reverse=True)
             result.update(
@@ -78,4 +90,5 @@ async def get_my_info_handler(request: Request, user_id: Optional[int] = None):
                     "followers": my_followers,
                 }
             )
+            logger.debug("Requesting User info: success")
             return {"user": result}

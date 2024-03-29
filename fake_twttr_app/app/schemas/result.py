@@ -1,3 +1,8 @@
+"""
+Schemas for validation of different results output
+"""
+
+
 from dataclasses import dataclass
 
 from pydantic import BaseModel, Field

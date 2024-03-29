@@ -1,3 +1,7 @@
+"""
+Schemas for validation user's info output
+"""
+
 from pydantic import BaseModel, Field
 
 

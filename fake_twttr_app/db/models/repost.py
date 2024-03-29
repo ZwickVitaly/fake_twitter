@@ -1,3 +1,7 @@
+"""
+Repost sqlalchemy model
+"""
+
 from typing import Any
 
 from sqlalchemy import Column, ForeignKey, Index, Integer

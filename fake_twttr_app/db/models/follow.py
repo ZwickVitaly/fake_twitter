@@ -1,3 +1,7 @@
+"""
+Follow sqlalchemy model
+"""
+
 from sqlalchemy import Column, ForeignKey, func
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 

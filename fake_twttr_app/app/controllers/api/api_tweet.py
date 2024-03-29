@@ -1,13 +1,16 @@
+"""
+Endpoints for Tweet CRUD
+"""
+
 from os import path as os_path
 from os import remove as os_remove
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
-from sqlalchemy import String, select, update
+from sqlalchemy import select, update
 
 from fake_twttr_app.app.auth_wrappers import auth_required_header
-from fake_twttr_app.app.folders import media_path
-from fake_twttr_app.app.keywords import api_key_keyword
+from fake_twttr_app.app.config import media_path, api_key_keyword, logger_name
 from fake_twttr_app.app.schemas import (
     BadResultSchema,
     DefaultPositiveResult,
@@ -24,9 +27,10 @@ from fake_twttr_app.db import Follow, Image, Tweet, User
 from fake_twttr_app.db.base import async_session
 import logging
 
-logger = logging.getLogger("uvicorn")
 
 api_tweets_router = APIRouter(prefix="/tweets", tags=["tweets"])
+
+logger = logging.getLogger(logger_name)
 
 
 @api_tweets_router.get(
@@ -48,7 +52,7 @@ async def get_feed_handler(request: Request):
             )
             tweets = q.scalars().unique().all()
             tweet_list = [await tweet.to_safe_json() for tweet in tweets]
-            tweet_list.sort(key=lambda x: x["created_at"], reverse=True)
+            logger.debug("Getting all existing tweets")
             return FeedOutSchema(tweets=tweet_list)
 
 
@@ -77,7 +81,8 @@ async def get_personal_feed_handler(request: Request):
             )
             tweets = q.scalars().unique().all()
             tweet_list = [await t.to_safe_json() for t in tweets]
-            tweet_list.sort(key=lambda x: x["likes"], reverse=True)
+            tweet_list.sort(key=lambda x: len(x["likes"]), reverse=True)
+            logger.debug("Getting all tweets of followed users")
             return {"tweets": tweet_list}
 
 
@@ -98,6 +103,7 @@ async def get_tweet_handler(request: Request, tweet_id: int):
             await session.execute(
                 update(Tweet).where(tweets_filter).values(views=Tweet.views + 1)
             )
+            logger.debug("Updating tweet views")
             tweet_q = await session.execute(
                 select(Tweet).join(User).filter(tweets_filter)
             )
@@ -122,21 +128,19 @@ async def get_tweet_handler(request: Request, tweet_id: int):
 async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
     async with async_session() as session:
         async with session.begin():
-            logger.info("Posting tweet")
             user_id = (
                 await User.get_user_by_api_token(request.headers.get(api_key_keyword))
             ).id
-            logger.info("Found user")
             new_tweet = Tweet(content=new_tweet_data.tweet_data, user_id=user_id)
-            logger.info("Created new tweet")
+            logger.debug("Attempting to create new Tweet")
             session.add(new_tweet)
             if new_tweet_data.tweet_media_ids:
-                logger.info("Media ids in new tweet data")
+                logger.debug(f"Found Tweet.media_ids={new_tweet_data.tweet_media_ids}")
                 for image_id in new_tweet_data.tweet_media_ids:
-                    logger.info("Searching for image in db")
+                    logger.debug(f"Searching for Image.id={image_id} in db")
                     image = await session.execute(select(Image).filter_by(id=image_id))
                     if not image.scalar_one_or_none():
-                        logger.info("Not found image")
+                        logger.debug(f"Updating Image: Image.id={image_id} - fail - not found image data in db")
                         await session.close()
                         return JSONResponse(
                             status_code=422,
@@ -144,15 +148,15 @@ async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
                                 f"Image id={image_id} is not downloaded yet"
                             ).to_json(),
                         )
-                    logger.info("Found image in db")
+                    logger.debug("Found image data in db")
                     await session.execute(
                         update(Image)
                         .where(Image.id == image_id)
                         .values(tweet_id=new_tweet.id)
                     )
-                    logger.info("Updated image's tweet id")
+                    logger.debug(f"Updated Image: Image.id={image_id} Tweet.id{new_tweet.id}")
             await session.commit()
-            logger.info("transaction complete")
+    logger.debug("Tweet creation - success")
 
     return ResultTweetCreationSchema(tweet_id=new_tweet.id)
 
@@ -179,12 +183,15 @@ async def delete_tweet_handler(request: Request, tweet_id: int):
                 .unique()
                 .scalar_one_or_none()
             )
+            logger.debug(f"Attempting delete Tweet: Tweet.id={tweet_id} User.id={user_id}")
             if not deleted_tweet:
+                logger.debug(f"delete Tweet: Tweet.id={tweet_id} User.id={user_id} - fail - tweet not found")
                 return JSONResponse(
                     status_code=404,
-                    content=NotFoundErrorResponse("Tweet is not found").to_json(),
+                    content=NotFoundErrorResponse("Tweet not found").to_json(),
                 )
             elif deleted_tweet.tweet_author.id != user_id:
+                logger.debug(f"Attempting delete Tweet: Tweet.id={tweet_id} User.id={user_id} - fail - not authorized")
                 return JSONResponse(
                     status_code=403,
                     content=UnAuthorizedErrorResponse(
@@ -192,10 +199,12 @@ async def delete_tweet_handler(request: Request, tweet_id: int):
                     ).to_json(),
                 )
             for image in deleted_tweet.images_objects:
+                logger.debug("Deleting tweet media from file system")
                 removed_image_path = os_path.join(
                     media_path, f"{image.id}{image.file_extension}"
                 )
                 os_remove(removed_image_path)
             await session.delete(deleted_tweet)
             await session.commit()
+    logger.debug("Tweet deleted")
     return DefaultPositiveResult()

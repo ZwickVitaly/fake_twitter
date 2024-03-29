@@ -1,3 +1,7 @@
+"""
+Image sqlalchemy model
+"""
+
 from sqlalchemy import Column, ForeignKey, Integer, String
 
 from fake_twttr_app.db.base import Base

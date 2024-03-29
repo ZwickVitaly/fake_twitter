@@ -1,3 +1,7 @@
+"""
+Tweet sqlalchemy model
+"""
+
 from typing import Any
 
 from sqlalchemy import Column, ForeignKey, Integer, String, select
@@ -6,7 +10,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from fake_twttr_app.app.folders import static_request_path
+from fake_twttr_app.app.config import static_request_path
 from fake_twttr_app.db.base import Base, async_session
 
 from .like import Like

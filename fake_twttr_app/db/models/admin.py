@@ -1,3 +1,7 @@
+"""
+Admin sqlalchemy model
+"""
+
 from sqlalchemy import Column, String, select
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.sql import func

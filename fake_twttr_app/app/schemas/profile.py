@@ -1,8 +1,11 @@
-from pydantic import BaseModel, Field
+"""
+Schemas for validation of user's profile info
+"""
 
-from .repost import RepostOutSchema
+
+from pydantic import Field
+
 from .result import DefaultPositiveResult
-from .tweet import TweetOutSchema
 from .user import UserBaseOutSchema
 
 

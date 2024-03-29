@@ -1,3 +1,7 @@
+"""
+Classes of file attributes validation
+"""
+
 from pathlib import Path
 
 from fastapi import HTTPException, UploadFile

@@ -1,3 +1,7 @@
+"""
+Schemas for validation of new user's info
+"""
+
 from typing import Optional
 
 from pydantic import BaseModel, Field

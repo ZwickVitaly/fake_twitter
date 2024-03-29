@@ -1,4 +1,4 @@
-from .api_create_user import api_admin_router
+from .api_admin_user import api_admin_router
 from .api_follow import api_follows_router
 from .api_like import api_likes_router
 from .api_media import api_media_router
