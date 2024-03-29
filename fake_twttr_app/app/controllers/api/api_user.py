@@ -7,8 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from fake_twttr_app.app.auth_wrappers import auth_required_header
 from fake_twttr_app.app.keywords import api_key_keyword
-from fake_twttr_app.app.schemas import ProfileResultSchema
-from fake_twttr_app.app.schemas.result import BadResultSchema
+from fake_twttr_app.app.schemas import ProfileResultSchema, BadResultSchema, ValidationErrorResultSchema
 from fake_twttr_app.db import Tweet, User, Like
 from fake_twttr_app.db.base import async_session
 
@@ -21,6 +20,7 @@ api_users_router = APIRouter(prefix="/users", tags=["users"])
         200: {"model": ProfileResultSchema},
         404: {"model": BadResultSchema},
         401: {"model": BadResultSchema},
+        422: {"model": ValidationErrorResultSchema},
     },
 )
 @api_users_router.get(
@@ -29,6 +29,7 @@ api_users_router = APIRouter(prefix="/users", tags=["users"])
         200: {"model": ProfileResultSchema},
         404: {"model": BadResultSchema},
         401: {"model": BadResultSchema},
+        422: {"model": ValidationErrorResultSchema},
     },
 )
 @auth_required_header

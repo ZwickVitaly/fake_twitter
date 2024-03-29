@@ -34,6 +34,7 @@ api_tweets_router = APIRouter(prefix="/tweets", tags=["tweets"])
     responses={
         200: {"model": ResultFeedSchema},
         401: {"model": BadResultSchema},
+        422: {"model": ValidationErrorResultSchema},
     },
 )
 @auth_required_header
@@ -56,6 +57,7 @@ async def get_feed_handler(request: Request):
     responses={
         200: {"model": ResultFeedSchema},
         401: {"model": BadResultSchema},
+        422: {"model": ValidationErrorResultSchema},
     },
 )
 @auth_required_header
@@ -162,6 +164,7 @@ async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
         401: {"model": BadResultSchema},
         403: {"model": BadResultSchema},
         404: {"model": BadResultSchema},
+        422: {"model": ValidationErrorResultSchema},
     },
 )
 @auth_required_header

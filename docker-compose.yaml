@@ -6,11 +6,12 @@ services:
     image: "fake_twitter"
     container_name: fake_twitter
     build: fake_twttr_app
-    entrypoint: uvicorn fake_twttr_app:app --host '0.0.0.0'
+    entrypoint: uvicorn fake_twttr_app:app --host '0.0.0.0' --log-config /app/fake_twttr_app/log.ini
     ports:
       - '8000:8000'
     volumes:
       - ./app_data/media:/app/fake_twttr_app/app/app_static/media
+      - ./app_data/logs/app:/app/log
     depends_on:
       postgres:
         condition: service_healthy
@@ -31,7 +32,7 @@ services:
       - "log_directory=/tmp/logs"
     volumes:
       - ./app_data/database:/var/lib/postgresql/data
-      - ./app_data/logs:/var/postgres/logs
+      - ./app_data/logs/postgres:/var/postgres/logs
     healthcheck:
       test: pg_isready -U admin
       interval: 10s
@@ -48,7 +49,9 @@ services:
         - "80:80"
       volumes:
         - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+        - ./app_data/logs/nginx:/var/log/nginx
         - ./static:/www/data
-        - ./app_data/media:/www/data/images
+        - ./app_data/media:/www/data/static
       depends_on:
-        - fake_twitter
+        fake_twitter:
+          condition: service_started
