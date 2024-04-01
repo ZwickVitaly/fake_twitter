@@ -2,11 +2,10 @@
 Classes of file attributes validation
 """
 
+import logging
 from pathlib import Path
 
 from fastapi import HTTPException, UploadFile
-import logging
-
 
 logger = logging.getLogger("uvicorn")
 
@@ -26,7 +25,9 @@ class FilesAmountValidator:
         if not files[0].size:
             raise HTTPException(400, detail=self.empty_message)
         elif files_amount > self.max_files:
-            raise HTTPException(400, detail=self.exceed_message.format(max_files=self.max_files))
+            raise HTTPException(
+                400, detail=self.exceed_message.format(max_files=self.max_files)
+            )
 
 
 class FileExtensionValidator:
@@ -45,7 +46,10 @@ class FileExtensionValidator:
         self.validate(file)
 
     def validate(self, file: UploadFile):
-        extension = Path(file.filename).suffix.lower()
+        file_name: str | None = file.filename
+        if not file_name:
+            raise HTTPException(status_code=400, detail="Empty file name")
+        extension = Path(file_name).suffix.lower()
         if extension not in self.allowed_extensions:
             detail = self.message.format(
                 extension=extension,
@@ -64,5 +68,10 @@ class FileSizeValidator:
         self.validate(file)
 
     def validate(self, file: UploadFile):
-        if file.size / 1024 / 1024 > self.max_mb:
-            raise HTTPException(400, detail=self.message.format(max_mb=self.max_mb))
+        size: int | None = file.size
+        if not size:
+            raise HTTPException(status_code=400, detail="Empty file")
+        elif (size / 1024 / 1024) > self.max_mb:
+            raise HTTPException(
+                status_code=400, detail=self.message.format(max_mb=self.max_mb)
+            )

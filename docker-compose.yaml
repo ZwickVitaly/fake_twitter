@@ -6,13 +6,14 @@ services:
     image: "fake_twitter"
     container_name: fake_twitter
     build: fake_twttr_app
-    entrypoint: uvicorn fake_twttr_app:app --host '0.0.0.0' --log-config /app/fake_twttr_app/log.ini
+    entrypoint: uvicorn fake_twttr_app:app --host '0.0.0.0' --port 8000 --log-config /app/fake_twttr_app/log.ini
     volumes:
       - ./app_data/media:/app/fake_twttr_app/app/app_static/media
       - ./app_data/logs/app:/app/log
     depends_on:
       postgres:
         condition: service_healthy
+
 
   postgres:
     container_name: postgres
@@ -38,10 +39,9 @@ services:
       retries: 3
 
 
-
   nginx:
       container_name: nginx
-      restart: always
+      restart: on-failure:5
       image: nginx
       ports:
         - "80:80"

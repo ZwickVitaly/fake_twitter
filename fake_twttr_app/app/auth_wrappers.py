@@ -3,7 +3,6 @@ Authentication wrappers module
 """
 
 import logging
-
 from functools import wraps
 
 from fastapi import Request
@@ -14,15 +13,20 @@ from fake_twttr_app.db import Admin, User
 from .config import api_key_keyword, logger_name
 from .schemas import AdminSchema, UnAuthenticatedErrorResponse
 
-
 logger = logging.getLogger(logger_name)
 
 
 def auth_required_header(func):
+    """
+    Decorator to wrap endpoint function
+    """
     logger.debug("Checking authentication header")
 
     @wraps(func)
     async def wrapper(request: Request, *args, **kwargs):
+        f"""
+        Wrapper to check if there is {api_key_keyword} header with valid value
+        """
         api_key = request.headers.get(api_key_keyword)
         if not api_key:
             logger.debug("Header not found")
@@ -48,20 +52,22 @@ def auth_required_header(func):
 
 
 def check_is_admin(func):
+    """
+    Decorator to wrap endpoint function
+    """
     logger.debug("Checking is this admin")
 
     @wraps(func)
-    async def wrapper(
-        request: Request, admin_schema: AdminSchema, *args, **kwargs
-    ):
+    async def wrapper(request: Request, admin_schema: AdminSchema, *args, **kwargs):
+        f"""
+        Wrapper to check if there valid admin credentials in request body
+        """
         admin_data = admin_schema.model_dump(exclude={"new_user_data"})
         if not await Admin.is_admin(**admin_data):
             logger.debug("Admin credentials not found")
             return JSONResponse(
                 status_code=401,
-                content=UnAuthenticatedErrorResponse(
-                    "Bad credentials"
-                ).to_json(),
+                content=UnAuthenticatedErrorResponse("Bad credentials").to_json(),
             )
         logger.debug("It is admin")
         return await func(request, admin_schema, *args, **kwargs)

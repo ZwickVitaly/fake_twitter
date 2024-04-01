@@ -10,10 +10,10 @@ from fake_twttr_app.db.base import Base
 class Image(Base):
     __tablename__ = "images"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id: Column[int] = Column(Integer, primary_key=True, autoincrement=True)
     file_extension = Column(
         String,
     )
-    tweet_id = Column(
+    tweet_id: Column[int] = Column(
         ForeignKey("tweets.id", ondelete="CASCADE"),
     )

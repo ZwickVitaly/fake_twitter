@@ -15,9 +15,13 @@ from fake_twttr_app.db.base import Base
 class Repost(Base):
     __tablename__ = "reposts"
 
-    id = Column(Integer, primary_key=True)
-    tweet_id = Column(ForeignKey("tweets.id", ondelete="CASCADE"), nullable=False)
-    user_id = Column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    id: Column[int] = Column(Integer, primary_key=True)
+    tweet_id: Column[int] = Column(
+        ForeignKey("tweets.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id: Column[int] = Column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     created_at = Column(
         TIMESTAMP(timezone=True, precision=0), server_default=func.current_timestamp()
     )

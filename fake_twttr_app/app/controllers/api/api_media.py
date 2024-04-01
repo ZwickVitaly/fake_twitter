@@ -2,21 +2,21 @@
 Endpoints for Media CRUD (Creation only at the moment)
 """
 
+import logging
 from os import path
 from pathlib import Path
-import logging
 
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 
 from fake_twttr_app.app.auth_wrappers import auth_required_header
-from fake_twttr_app.app.config import media_path, logger_name
-from fake_twttr_app.app.schemas.result import BadResultSchema, ResultMediaSchema
+from fake_twttr_app.app.config import logger_name, media_path, max_megabytes_file_size, allowed_extensions, api_key_keyword
 from fake_twttr_app.app.schemas import (
+    BadResultSchema,
     FileExtensionValidator,
     FileSizeValidator,
+    ResultMediaSchema,
 )
 from fake_twttr_app.db import Image, async_session
-
 
 api_media_router = APIRouter(prefix="/medias", tags=["media"])
 
@@ -26,8 +26,8 @@ logger = logging.getLogger(logger_name)
 @api_media_router.post(
     "",
     dependencies=[
-        Depends(FileSizeValidator(max_mb=10)),
-        Depends(FileExtensionValidator(allowed_extensions=[".jpg", ".jpeg", ".png"])),
+        Depends(FileSizeValidator(max_mb=max_megabytes_file_size)),
+        Depends(FileExtensionValidator(allowed_extensions=allowed_extensions)),
     ],
     responses={
         200: {"model": ResultMediaSchema},
@@ -38,8 +38,13 @@ logger = logging.getLogger(logger_name)
 )
 @auth_required_header
 async def post_media_handler(request: Request, file: UploadFile = File(...)):
+    """
+    Endpoint to download media file.
+    
+    <h3>Requires api-key header with valid api key</h3>
+    """
     logger.debug("Attempting file download")
-    file_extension = Path(file.filename).suffix.lower()
+    file_extension = Path(file.filename).suffix.lower()  # type: ignore[arg-type]
     async with async_session() as session:
         async with session.begin():
             new_image = Image(file_extension=file_extension)
@@ -51,4 +56,4 @@ async def post_media_handler(request: Request, file: UploadFile = File(...)):
         logger.debug(f"Writing file to: {file_path}")
         new_file.write(await file.read())
     logger.debug("File download complete")
-    return ResultMediaSchema(media_id=new_image.id)
+    return ResultMediaSchema(media_id=new_image.id)  # type: ignore[arg-type]

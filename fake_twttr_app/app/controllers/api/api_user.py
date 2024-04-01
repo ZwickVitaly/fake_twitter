@@ -12,10 +12,12 @@ from sqlalchemy.orm import selectinload
 
 from fake_twttr_app.app.auth_wrappers import auth_required_header
 from fake_twttr_app.app.config import api_key_keyword, logger_name
-from fake_twttr_app.app.schemas import ProfileResultSchema, BadResultSchema, ValidationErrorResultSchema
-from fake_twttr_app.db import Tweet, User, Like
+from fake_twttr_app.app.schemas import (
+    BadResultSchema,
+    ProfileResultSchema,
+)
+from fake_twttr_app.db import Like, Tweet, User
 from fake_twttr_app.db.base import async_session
-
 
 api_users_router = APIRouter(prefix="/users", tags=["users"])
 
@@ -28,7 +30,7 @@ logger = logging.getLogger(logger_name)
         200: {"model": ProfileResultSchema},
         404: {"model": BadResultSchema},
         401: {"model": BadResultSchema},
-        422: {"model": ValidationErrorResultSchema},
+        422: {"model": BadResultSchema},
     },
 )
 @api_users_router.get(
@@ -37,14 +39,23 @@ logger = logging.getLogger(logger_name)
         200: {"model": ProfileResultSchema},
         404: {"model": BadResultSchema},
         401: {"model": BadResultSchema},
-        422: {"model": ValidationErrorResultSchema},
+        422: {"model": BadResultSchema},
     },
 )
 @auth_required_header
 async def get_my_info_handler(request: Request, user_id: Optional[int] = None):
+    """
+    Endpoint to get user's info.
+
+    /me User is recognized api-key header value
+    
+    /{user_id} user is recognized by id
+
+    <h3>Requires api-key header with valid api key</h3>
+    """
     if user_id:
         logger.debug(f"Requesting User: User.id={user_id}")
-        key = (User.id == user_id)
+        key = User.id == user_id
     else:
         logger.debug("Self info request")
         key = User.api_key.ilike(request.headers.get(api_key_keyword))
@@ -54,9 +65,11 @@ async def get_my_info_handler(request: Request, user_id: Optional[int] = None):
                 select(User)
                 .options(selectinload(User.user_tweet_repost))
                 .options(
-                    selectinload(User.tweets).options(
-                        selectinload(Tweet.user_tweet_repost)
-                    ).options(selectinload(Tweet.tweet_likes).options(selectinload(Like.user)))
+                    selectinload(User.tweets)
+                    .options(selectinload(Tweet.user_tweet_repost))
+                    .options(
+                        selectinload(Tweet.tweet_likes).options(selectinload(Like.user))
+                    )
                 )
                 .options(selectinload(User.followed))
                 .options(selectinload(User.followers))
@@ -74,7 +87,9 @@ async def get_my_info_handler(request: Request, user_id: Optional[int] = None):
                     },
                 )
 
-            my_reposts = [await repost.to_safe_json() for repost in user.user_tweet_repost]
+            my_reposts = [
+                await repost.to_safe_json() for repost in user.user_tweet_repost
+            ]
             tweets = [await tweet.to_safe_json() for tweet in user.tweets]
             my_followed = [await user.to_safe_json() for user in user.followed]
             my_followers = [await user.to_safe_json() for user in user.followers]

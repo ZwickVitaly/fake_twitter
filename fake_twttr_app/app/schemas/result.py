@@ -4,6 +4,7 @@ Schemas for validation of different results output
 
 
 from dataclasses import dataclass
+from typing import Any, Sequence
 
 from pydantic import BaseModel, Field
 
@@ -45,19 +46,17 @@ class ResultTweetSchema(ResultFeedSchema):
 
 
 class BadResultSchema(DefaultPositiveResult):
+    """Schema for unsuccessful result response"""
     result: bool = Field(default=False)
     error_type: str
-    error_msg: str | list[dict]
-
-
-class ValidationErrorResultSchema(DefaultPositiveResult):
-    result: bool = Field(default=False)
-    error_type: str
-    error_msg: list[dict]
+    error_msg: Sequence[Any]
 
 
 @dataclass
 class ErrorResponse:
+    """
+    Class for basic error response
+    """
     error_type: str
     error_msg: str
     result: bool
@@ -81,6 +80,9 @@ class ErrorResponse:
 
 
 class IntegrityErrorResponse(ErrorResponse):
+    """
+    Class for integrity error response
+    """
     def __init__(
         self, error_msg: str, result: bool = False, error_type: str = "IntegrityError"
     ):
@@ -88,6 +90,9 @@ class IntegrityErrorResponse(ErrorResponse):
 
 
 class NotFoundErrorResponse(ErrorResponse):
+    """
+    Class for not found error response
+    """
     def __init__(
         self, error_msg: str, result: bool = False, error_type: str = "NotFoundError"
     ):
@@ -95,6 +100,9 @@ class NotFoundErrorResponse(ErrorResponse):
 
 
 class UnAuthenticatedErrorResponse(ErrorResponse):
+    """
+    Class for unauthenticated error response
+    """
     def __init__(
         self,
         error_msg: str,
@@ -105,6 +113,9 @@ class UnAuthenticatedErrorResponse(ErrorResponse):
 
 
 class UnAuthorizedErrorResponse(ErrorResponse):
+    """
+    Class for unauthorized error response
+    """
     def __init__(
         self,
         error_msg: str,

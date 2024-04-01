@@ -6,8 +6,8 @@ from typing import Any
 
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy.dialects.postgresql import TIMESTAMP
-from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 from fake_twttr_app.db.base import Base
 
@@ -15,8 +15,12 @@ from fake_twttr_app.db.base import Base
 class Like(Base):
     __tablename__ = "likes"
 
-    tweet_id = Column(ForeignKey("tweets.id"), nullable=False, primary_key=True)
-    user_id = Column(ForeignKey("users.id"), nullable=False, primary_key=True)
+    tweet_id: Column[int] = Column(
+        ForeignKey("tweets.id"), nullable=False, primary_key=True
+    )
+    user_id: Column[int] = Column(
+        ForeignKey("users.id"), nullable=False, primary_key=True
+    )
     created_at = Column(
         TIMESTAMP(timezone=True, precision=0), server_default=func.current_timestamp()
     )

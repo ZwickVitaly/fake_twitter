@@ -9,10 +9,9 @@ from sqlalchemy import (
     CheckConstraint,
     Column,
     Index,
-    String,
     Integer,
+    String,
     select,
-    text,
 )
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -70,7 +69,7 @@ class User(Base):
 
     user_likes = relationship(
         "Like",
-        back_populates='user',
+        back_populates="user",
         lazy="noload",
         cascade="all, delete-orphan",
         foreign_keys="Like.user_id",
@@ -87,7 +86,7 @@ class User(Base):
     )
 
     def __repr__(self):
-        return f"Пользователь {self.name}"
+        return f"User: {self.name}"
 
     def to_json(self) -> dict[str, Any]:
         return {

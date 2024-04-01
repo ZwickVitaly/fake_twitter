@@ -10,7 +10,4 @@ class UserBaseOutSchema(BaseModel):
         title="User's id",
         examples=[1, 2, 3],
     )
-    name: str = Field(
-        title="User's name",
-        examples=["Doctor Doom", "Sinestro"]
-    )
+    name: str = Field(title="User's name", examples=["Doctor Doom", "Sinestro"])

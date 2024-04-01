@@ -10,6 +10,10 @@ from .result import DefaultPositiveResult
 
 
 class NewUserDataSchema(BaseModel):
+    """
+    Schema for new user's data validation
+    """
+
     id: Optional[int] = Field(title="User's id", default=None)
     name: str = Field(
         title="User's name",
@@ -22,6 +26,10 @@ class NewUserDataSchema(BaseModel):
 
 
 class AdminSchema(BaseModel):
+    """
+    Schema for admin's credentials validation
+    """
+
     login: str = Field(
         title="Admin's login",
         examples=["darkhacker", "megadestroyer"],
@@ -35,4 +43,8 @@ class AdminSchema(BaseModel):
 
 
 class CreatedUserSchema(DefaultPositiveResult):
+    """
+    Schema for response with new user's data
+    """
+
     created_user_data: NewUserDataSchema = Field(title="Newly created user's data")

@@ -15,15 +15,12 @@ from fake_twttr_app.app.schemas import (
     BadResultSchema,
     DefaultPositiveResult,
     IntegrityErrorResponse,
-    ValidationErrorResultSchema,
 )
 from fake_twttr_app.db import Repost, User
 from fake_twttr_app.db.base import async_session
 
-api_reposts_router = APIRouter(
-    prefix="/tweets/{tweet_id:int}/repost", tags=["reposts"]
-)
-logger = logging.getLogger("uvicorn")
+api_reposts_router = APIRouter(prefix="/tweets/{tweet_id:int}/repost", tags=["reposts"])
+logger = logging.getLogger(logger_name)
 
 
 @api_reposts_router.post(
@@ -32,11 +29,20 @@ logger = logging.getLogger("uvicorn")
         200: {"model": DefaultPositiveResult},
         403: {"model": BadResultSchema},
         404: {"model": BadResultSchema},
-        422: {"model": ValidationErrorResultSchema},
+        422: {"model": BadResultSchema},
     },
 )
 @auth_required_header
-async def post_like_handler(request: Request, tweet_id: int):
+async def post_repost_handler(request: Request, tweet_id: int):
+    """
+    Endpoint to repost tweet id.
+
+    User is recognized by api-key header value
+    
+    User can do only one repost of other user's tweet
+
+    <h3>Requires api-key header with valid api key</h3>
+    """
     async with async_session() as session:
         async with session.begin():
             user_id = (
@@ -48,14 +54,19 @@ async def post_like_handler(request: Request, tweet_id: int):
                 session.add(new_repost)
                 await session.commit()
             except IntegrityError as e:
-                if e.orig.pgcode == "23503":
-                    logger.debug(f"Repost: User.id={user_id} Tweet.id={tweet_id} - fail - tweet not found")
+                pgcode = e.orig.__getattribute__("pgcode")
+                if pgcode == "23503":
+                    logger.debug(
+                        f"Repost: User.id={user_id} Tweet.id={tweet_id} - fail - tweet not found"
+                    )
                     return JSONResponse(
                         status_code=404,
                         content=IntegrityErrorResponse("Tweet not found").to_json(),
                     )
-                elif e.orig.pgcode == "23505":
-                    logger.debug(f"Repost: User.id={user_id} Tweet.id={tweet_id} - fail - already reposted")
+                elif pgcode == "23505":
+                    logger.debug(
+                        f"Repost: User.id={user_id} Tweet.id={tweet_id} - fail - already reposted"
+                    )
 
                     return JSONResponse(
                         status_code=409,
@@ -74,19 +85,26 @@ async def post_like_handler(request: Request, tweet_id: int):
     responses={
         200: {"model": DefaultPositiveResult},
         401: {"model": BadResultSchema},
-        422: {"model": ValidationErrorResultSchema},
+        422: {"model": BadResultSchema},
     },
 )
 @auth_required_header
-async def delete_like_handler(request: Request, tweet_id: int):
+async def delete_repost_handler(request: Request, tweet_id: int):
+    """
+    Endpoint to delete repost by tweet id.
+
+    User is recognized by api-key header value
+    
+    User can delete only his own repost
+
+    <h3>Requires api-key header with valid api key</h3>
+    """
     async with async_session() as session:
         async with session.begin():
             user_id = (
                 await User.get_user_by_api_token(request.headers.get(api_key_keyword))
             ).id
-            like_q = delete(Repost).filter_by(
-                user_id=user_id, tweet_id=tweet_id
-            )
-            await session.execute(like_q)
+            repost_q = delete(Repost).filter_by(user_id=user_id, tweet_id=tweet_id)
+            await session.execute(repost_q)
     logger.debug(f"delete Repost: User.id={user_id} Tweet.id={tweet_id}")
     return DefaultPositiveResult()

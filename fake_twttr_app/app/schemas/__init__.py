@@ -1,4 +1,4 @@
-from .new_user import CreatedUserSchema, AdminSchema
+from .new_user import AdminSchema, CreatedUserSchema
 from .profile import ProfileResultSchema
 from .repost import RepostOutSchema
 from .result import (
@@ -7,15 +7,15 @@ from .result import (
     IntegrityErrorResponse,
     NotFoundErrorResponse,
     ResultFeedSchema,
+    ResultMediaSchema,
     ResultTweetCreationSchema,
     ResultTweetSchema,
     UnAuthenticatedErrorResponse,
     UnAuthorizedErrorResponse,
-    ValidationErrorResultSchema,
 )
 from .tweet import FeedOutSchema, NewTweetSchema, TweetOutSchema
+from .upload_file import FileExtensionValidator, FileSizeValidator
 from .user import UserBaseOutSchema
-from .upload_file import FileSizeValidator, FileExtensionValidator
 
 __all__ = [
     "NewTweetSchema",
@@ -34,8 +34,8 @@ __all__ = [
     "UnAuthorizedErrorResponse",
     "UnAuthenticatedErrorResponse",
     "ResultTweetCreationSchema",
-    "ValidationErrorResultSchema",
     "IntegrityErrorResponse",
     "FileSizeValidator",
     "FileExtensionValidator",
+    "ResultMediaSchema",
 ]

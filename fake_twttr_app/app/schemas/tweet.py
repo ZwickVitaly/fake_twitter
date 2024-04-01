@@ -15,7 +15,9 @@ class NewTweetSchema(BaseModel):
         title="Tweet content",
         examples=["Biden go Texas!", "I might been underestimating my sleep time"],
     )
-    tweet_media_ids: Optional[list[int]] = Field(title="Tweet media ids", default=None, max_length=4)
+    tweet_media_ids: Optional[list[int]] = Field(
+        title="Tweet media ids", default=None, max_length=4
+    )
 
 
 class TweetOutSchema(BaseModel):
@@ -45,7 +47,9 @@ class TweetOutSchema(BaseModel):
     # )
     likes: list[UserBaseOutSchema] = Field(
         title="Tweet's likes",
-        examples=[[{"id": 1, "name": "John"}, {"id": 2, "name": "Jane"}], ],
+        examples=[
+            [{"id": 1, "name": "John"}, {"id": 2, "name": "Jane"}],
+        ],
     )
     # reposts: int = Field(
     #     title="Tweet's reposts",

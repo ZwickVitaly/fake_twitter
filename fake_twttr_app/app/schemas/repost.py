@@ -1,5 +1,5 @@
 """
-Schemas for validation of Repost CRUD
+Schemas for validation of Repost CRUD (Creation only at the moment)
 """
 
 from datetime import datetime
@@ -10,11 +10,12 @@ from .tweet import TweetOutSchema
 
 
 class RepostOutSchema(BaseModel):
+    """
+    Schema for repost data response
+    """
     id: int = Field(
         title="Repost id",
-        examples=[
-            1, 2, 3
-        ],
+        examples=[1, 2, 3],
     )
     repost: TweetOutSchema = Field(
         title="Reposted tweet",

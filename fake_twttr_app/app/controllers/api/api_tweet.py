@@ -2,6 +2,7 @@
 Endpoints for Tweet CRUD
 """
 
+import logging
 from os import path as os_path
 from os import remove as os_remove
 
@@ -10,23 +11,20 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import select, update
 
 from fake_twttr_app.app.auth_wrappers import auth_required_header
-from fake_twttr_app.app.config import media_path, api_key_keyword, logger_name
+from fake_twttr_app.app.config import api_key_keyword, logger_name, media_path
 from fake_twttr_app.app.schemas import (
     BadResultSchema,
     DefaultPositiveResult,
+    FeedOutSchema,
     NewTweetSchema,
     NotFoundErrorResponse,
     ResultFeedSchema,
     ResultTweetCreationSchema,
     ResultTweetSchema,
-    FeedOutSchema,
     UnAuthorizedErrorResponse,
-    ValidationErrorResultSchema,
 )
 from fake_twttr_app.db import Follow, Image, Tweet, User
 from fake_twttr_app.db.base import async_session
-import logging
-
 
 api_tweets_router = APIRouter(prefix="/tweets", tags=["tweets"])
 
@@ -38,11 +36,16 @@ logger = logging.getLogger(logger_name)
     responses={
         200: {"model": ResultFeedSchema},
         401: {"model": BadResultSchema},
-        422: {"model": ValidationErrorResultSchema},
+        422: {"model": BadResultSchema},
     },
 )
 @auth_required_header
 async def get_feed_handler(request: Request):
+    """
+    Endpoint to get all existing tweets, sorted by creation date (latest > earliest).
+
+    <h3>Requires api-key header with valid api key</h3>
+    """
     async with async_session() as session:
         async with session.begin():
             q = await session.execute(
@@ -53,7 +56,7 @@ async def get_feed_handler(request: Request):
             tweets = q.scalars().unique().all()
             tweet_list = [await tweet.to_safe_json() for tweet in tweets]
             logger.debug("Getting all existing tweets")
-            return FeedOutSchema(tweets=tweet_list)
+            return FeedOutSchema(tweets=tweet_list)  # type: ignore[arg-type]
 
 
 @api_tweets_router.get(
@@ -61,11 +64,20 @@ async def get_feed_handler(request: Request):
     responses={
         200: {"model": ResultFeedSchema},
         401: {"model": BadResultSchema},
-        422: {"model": ValidationErrorResultSchema},
+        422: {"model": BadResultSchema},
     },
 )
 @auth_required_header
 async def get_personal_feed_handler(request: Request):
+    """
+    Endpoint to get tweets of users, followed by User
+    
+    Sorted by: likes amount, views amount, creation date -> e.g. most popular
+
+    User is recognized by api-key header value
+
+    <h3>Requires api-key header with valid api key</h3>
+    """
     async with async_session() as session:
         async with session.begin():
             user = await User.get_user_by_api_token(
@@ -92,11 +104,16 @@ async def get_personal_feed_handler(request: Request):
         200: {"model": ResultTweetSchema},
         401: {"model": BadResultSchema},
         404: {"model": BadResultSchema},
-        422: {"model": ValidationErrorResultSchema},
+        422: {"model": BadResultSchema},
     },
 )
 @auth_required_header
 async def get_tweet_handler(request: Request, tweet_id: int):
+    """
+    Endpoint to get tweet by id
+
+    Requires api-key header with valid api key
+    """
     async with async_session() as session:
         async with session.begin():
             tweets_filter = Tweet.id.ilike(tweet_id)
@@ -121,11 +138,18 @@ async def get_tweet_handler(request: Request, tweet_id: int):
     responses={
         200: {"model": ResultTweetCreationSchema},
         401: {"model": BadResultSchema},
-        422: {"model": ValidationErrorResultSchema},
+        422: {"model": BadResultSchema},
     },
 )
 @auth_required_header
 async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
+    """
+    Endpoint to post new tweet.
+
+    User is recognized by api-key header value
+
+    <h3>Requires api-key header with valid api key</h3>
+    """
     async with async_session() as session:
         async with session.begin():
             user_id = (
@@ -140,7 +164,9 @@ async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
                     logger.debug(f"Searching for Image.id={image_id} in db")
                     image = await session.execute(select(Image).filter_by(id=image_id))
                     if not image.scalar_one_or_none():
-                        logger.debug(f"Updating Image: Image.id={image_id} - fail - not found image data in db")
+                        logger.debug(
+                            f"Updating Image: Image.id={image_id} - fail - not found image data in db"
+                        )
                         await session.close()
                         return JSONResponse(
                             status_code=422,
@@ -151,14 +177,16 @@ async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
                     logger.debug("Found image data in db")
                     await session.execute(
                         update(Image)
-                        .where(Image.id == image_id)
+                        .filter_by(id=image_id)
                         .values(tweet_id=new_tweet.id)
                     )
-                    logger.debug(f"Updated Image: Image.id={image_id} Tweet.id{new_tweet.id}")
+                    logger.debug(
+                        f"Updated Image: Image.id={image_id} Tweet.id{new_tweet.id}"
+                    )
             await session.commit()
     logger.debug("Tweet creation - success")
 
-    return ResultTweetCreationSchema(tweet_id=new_tweet.id)
+    return ResultTweetCreationSchema(tweet_id=new_tweet.id)  # type: ignore[arg-type]
 
 
 @api_tweets_router.delete(
@@ -168,11 +196,20 @@ async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
         401: {"model": BadResultSchema},
         403: {"model": BadResultSchema},
         404: {"model": BadResultSchema},
-        422: {"model": ValidationErrorResultSchema},
+        422: {"model": BadResultSchema},
     },
 )
 @auth_required_header
 async def delete_tweet_handler(request: Request, tweet_id: int):
+    """
+    Endpoint delete tweet by id.
+    
+    User can delete only his own tweet
+    
+    User is recognized by api-key header value
+
+    <h3>Requires api-key header with valid api key</h3>
+    """
     async with async_session() as session:
         async with session.begin():
             user_id = (
@@ -183,15 +220,21 @@ async def delete_tweet_handler(request: Request, tweet_id: int):
                 .unique()
                 .scalar_one_or_none()
             )
-            logger.debug(f"Attempting delete Tweet: Tweet.id={tweet_id} User.id={user_id}")
+            logger.debug(
+                f"Attempting delete Tweet: Tweet.id={tweet_id} User.id={user_id}"
+            )
             if not deleted_tweet:
-                logger.debug(f"delete Tweet: Tweet.id={tweet_id} User.id={user_id} - fail - tweet not found")
+                logger.debug(
+                    f"delete Tweet: Tweet.id={tweet_id} User.id={user_id} - fail - tweet not found"
+                )
                 return JSONResponse(
                     status_code=404,
                     content=NotFoundErrorResponse("Tweet not found").to_json(),
                 )
             elif deleted_tweet.tweet_author.id != user_id:
-                logger.debug(f"Attempting delete Tweet: Tweet.id={tweet_id} User.id={user_id} - fail - not authorized")
+                logger.debug(
+                    f"Attempting delete Tweet: Tweet.id={tweet_id} User.id={user_id} - fail - not authorized"
+                )
                 return JSONResponse(
                     status_code=403,
                     content=UnAuthorizedErrorResponse(
