@@ -2,25 +2,12 @@ version: '3.9'
 
 services:
 
-  fake_twitter:
-    image: "fake_twitter"
-    container_name: fake_twitter
-    build: fake_twttr_app
-    entrypoint: uvicorn fake_twttr_app:app --host '0.0.0.0' --port 8000 --log-config /app/fake_twttr_app/log.ini
-    volumes:
-      - ./app_data/media:/app/fake_twttr_app/app/app_static/media
-      - ./app_data/logs/app:/app/log
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-
   postgres:
     container_name: postgres
     image: postgres
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=admin
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     command:
       - "postgres"
       - "-c"
@@ -35,9 +22,40 @@ services:
     healthcheck:
       test: pg_isready -U admin
       interval: 10s
-      timeout: 3s
+      timeout: 10s
       retries: 3
 
+  fake_twitter:
+    image: "fake_twitter"
+    container_name: fake_twitter
+    build: fake_twitter
+    environment:
+      - API_KEYWORD=${API_KEYWORD}
+      - ADMIN_LOGIN=${USER}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    entrypoint: uvicorn fake_twitter:app --host '0.0.0.0' --port 8000 --log-config /app/fake_twitter/log.ini
+    volumes:
+      - ./app_data/media:/app/app_static/media
+      - ./app_data/logs/app:/app/log
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+  tests:
+    image: "fake_twitter_tests"
+    container_name: tests
+    build: tests
+    restart: on-failure:3
+    environment:
+      - ADMIN_LOGIN=${USER}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    entrypoint: pytest tests
+    depends_on:
+      fake_twitter:
+        condition: service_started
 
   nginx:
       container_name: nginx
@@ -51,5 +69,5 @@ services:
         - ./static:/www/data
         - ./app_data/media:/www/data/static
       depends_on:
-        fake_twitter:
-          condition: service_started
+        tests:
+          condition: service_completed_successfully
