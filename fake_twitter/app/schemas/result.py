@@ -47,6 +47,7 @@ class ResultTweetSchema(ResultFeedSchema):
 
 class BadResultSchema(DefaultPositiveResult):
     """Schema for unsuccessful result response"""
+
     result: bool = Field(default=False)
     error_type: str
     error_msg: Sequence[Any]
@@ -57,6 +58,7 @@ class ErrorResponse:
     """
     Class for basic error response
     """
+
     error_type: str
     error_msg: str
     result: bool
@@ -83,6 +85,7 @@ class IntegrityErrorResponse(ErrorResponse):
     """
     Class for integrity error response
     """
+
     def __init__(
         self, error_msg: str, result: bool = False, error_type: str = "IntegrityError"
     ):
@@ -93,6 +96,7 @@ class NotFoundErrorResponse(ErrorResponse):
     """
     Class for not found error response
     """
+
     def __init__(
         self, error_msg: str, result: bool = False, error_type: str = "NotFoundError"
     ):
@@ -103,6 +107,7 @@ class UnAuthenticatedErrorResponse(ErrorResponse):
     """
     Class for unauthenticated error response
     """
+
     def __init__(
         self,
         error_msg: str,
@@ -116,6 +121,7 @@ class UnAuthorizedErrorResponse(ErrorResponse):
     """
     Class for unauthorized error response
     """
+
     def __init__(
         self,
         error_msg: str,

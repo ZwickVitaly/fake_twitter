@@ -109,12 +109,9 @@ class User(Base):
 
     @classmethod
     async def get_user_by_id(cls, user_id):
-        if not isinstance(user_id, str):
-            return None
         async with async_session() as session:
-            user_filter = cls.id.cast(String).ilike(user_id)
             user = await session.execute(
-                select(cls).filter(user_filter).filter_by(active=True)
+                select(cls).filter_by(id=user_id, active=True)
             )
         return user.unique().scalar_one_or_none()
 

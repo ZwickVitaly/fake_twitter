@@ -15,7 +15,6 @@ from .controllers import (
     api_follows_router,
     api_likes_router,
     api_media_router,
-    api_reposts_router,
     api_tweets_router,
     api_users_router,
 )
@@ -62,7 +61,7 @@ logger.debug("Including routers")
 app.include_router(api_users_router, prefix="/api")
 app.include_router(api_likes_router, prefix="/api")
 app.include_router(api_tweets_router, prefix="/api")
-app.include_router(api_reposts_router, prefix="/api")
+# app.include_router(api_reposts_router, prefix="/api")
 app.include_router(api_follows_router, prefix="/api")
 app.include_router(api_admin_router, prefix="/api")
 app.include_router(api_media_router, prefix="/api")

@@ -9,7 +9,13 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 
 from fake_twitter.app.auth_wrappers import auth_required_header
-from fake_twitter.app.config import logger_name, media_path, max_megabytes_file_size, allowed_extensions, api_key_keyword
+from fake_twitter.app.config import (
+    logger_name,
+    media_path,
+    max_megabytes_file_size,
+    allowed_extensions,
+    api_key_keyword,
+)
 from fake_twitter.app.schemas import (
     BadResultSchema,
     FileExtensionValidator,
@@ -40,7 +46,7 @@ logger = logging.getLogger(logger_name)
 async def post_media_handler(request: Request, file: UploadFile = File(...)):
     """
     Endpoint to download media file.
-    
+
     <h3>Requires api-key header with valid api key</h3>
     """
     logger.debug("Attempting file download")

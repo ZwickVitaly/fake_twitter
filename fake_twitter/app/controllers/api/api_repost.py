@@ -1,5 +1,7 @@
 """
 Endpoints for Repost CRUD
+
+Currently deprecated
 """
 
 import logging
@@ -27,9 +29,10 @@ logger = logging.getLogger(logger_name)
     "",
     responses={
         200: {"model": DefaultPositiveResult},
-        403: {"model": BadResultSchema},
+        401: {"model": BadResultSchema},
         404: {"model": BadResultSchema},
-        422: {"model": BadResultSchema},
+        409: {"model": BadResultSchema},
+
     },
 )
 @auth_required_header
@@ -38,7 +41,7 @@ async def post_repost_handler(request: Request, tweet_id: int):
     Endpoint to repost tweet id.
 
     User is recognized by api-key header value
-    
+
     User can do only one repost of other user's tweet
 
     <h3>Requires api-key header with valid api key</h3>
@@ -85,7 +88,6 @@ async def post_repost_handler(request: Request, tweet_id: int):
     responses={
         200: {"model": DefaultPositiveResult},
         401: {"model": BadResultSchema},
-        422: {"model": BadResultSchema},
     },
 )
 @auth_required_header
@@ -94,8 +96,6 @@ async def delete_repost_handler(request: Request, tweet_id: int):
     Endpoint to delete repost by tweet id.
 
     User is recognized by api-key header value
-    
-    User can delete only his own repost
 
     <h3>Requires api-key header with valid api key</h3>
     """

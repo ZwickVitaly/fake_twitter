@@ -28,9 +28,7 @@ logger = logging.getLogger(logger_name)
     responses={
         200: {"model": DefaultPositiveResult},
         401: {"model": BadResultSchema},
-        403: {"model": BadResultSchema},
         404: {"model": BadResultSchema},
-        422: {"model": BadResultSchema},
     },
 )
 @auth_required_header
@@ -39,7 +37,7 @@ async def post_like_handler(request: Request, tweet_id: int):
     Endpoint to like tweet by id.
 
     User is recognized by api-key header value
-    
+
     User can like tweet only once
 
     <h3>Requires api-key header with valid api key</h3>
@@ -85,7 +83,6 @@ async def post_like_handler(request: Request, tweet_id: int):
     responses={
         200: {"model": DefaultPositiveResult},
         401: {"model": BadResultSchema},
-        422: {"model": BadResultSchema},
     },
 )
 @auth_required_header
@@ -94,7 +91,7 @@ async def delete_like_handler(request: Request, tweet_id: int):
     Endpoint delete tweet like by tweet id.
 
     User is recognized by api-key header value
-    
+
     User can delete only his own like
 
     <h3>Requires api-key header with valid api key</h3>

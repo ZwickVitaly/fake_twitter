@@ -50,4 +50,5 @@ class ProfileResultSchema(DefaultPositiveResult):
     """
     Schema for profile data response, paired with default positive response {"result": True}
     """
+
     user: ProfileOutSchema = Field()

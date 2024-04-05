@@ -71,7 +71,7 @@ async def get_feed_handler(request: Request):
 async def get_personal_feed_handler(request: Request):
     """
     Endpoint to get tweets of users, followed by User
-    
+
     Sorted by: likes amount, views amount, creation date -> e.g. most popular
 
     User is recognized by api-key header value
@@ -116,13 +116,12 @@ async def get_tweet_handler(request: Request, tweet_id: int):
     """
     async with async_session() as session:
         async with session.begin():
-            tweets_filter = Tweet.id.ilike(tweet_id)
             await session.execute(
-                update(Tweet).where(tweets_filter).values(views=Tweet.views + 1)
+                update(Tweet).where(Tweet.id == tweet_id).values(views=Tweet.views + 1)
             )
             logger.debug("Updating tweet views")
             tweet_q = await session.execute(
-                select(Tweet).join(User).filter(tweets_filter)
+                select(Tweet).filter_by(id=tweet_id).join(User)
             )
             tweet = tweet_q.unique().scalar_one_or_none()
             if not tweet:
@@ -167,6 +166,7 @@ async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
                         logger.debug(
                             f"Updating Image: Image.id={image_id} - fail - not found image data in db"
                         )
+                        await session.rollback()
                         await session.close()
                         return JSONResponse(
                             status_code=422,
@@ -203,9 +203,9 @@ async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
 async def delete_tweet_handler(request: Request, tweet_id: int):
     """
     Endpoint delete tweet by id.
-    
+
     User can delete only his own tweet
-    
+
     User is recognized by api-key header value
 
     <h3>Requires api-key header with valid api key</h3>

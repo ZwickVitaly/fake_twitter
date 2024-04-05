@@ -48,18 +48,21 @@ services:
     image: "fake_twitter_tests"
     container_name: tests
     build: tests
-    restart: on-failure:3
+    restart: on-failure
     environment:
       - ADMIN_LOGIN=${USER}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-    entrypoint: pytest tests
+      - API_KEYWORD=${API_KEYWORD}
+    volumes:
+      - ./app_data/logs/tests:/tests/logs
     depends_on:
       fake_twitter:
         condition: service_started
 
+
   nginx:
       container_name: nginx
-      restart: on-failure:5
+      restart: on-failure
       image: nginx
       ports:
         - "80:80"

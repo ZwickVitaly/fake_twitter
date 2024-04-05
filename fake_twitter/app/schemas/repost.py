@@ -13,6 +13,7 @@ class RepostOutSchema(BaseModel):
     """
     Schema for repost data response
     """
+
     id: int = Field(
         title="Repost id",
         examples=[1, 2, 3],

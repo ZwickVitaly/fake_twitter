@@ -21,9 +21,7 @@ from fake_twitter.app.schemas import (
 )
 from fake_twitter.db import Like, Tweet, User, async_session
 
-api_admin_router = APIRouter(
-    prefix="/admin/user", include_in_schema=False
-)
+api_admin_router = APIRouter(prefix="/admin/user", include_in_schema=False)
 
 logger = logging.getLogger(logger_name)
 
@@ -57,7 +55,7 @@ async def create_new_user(request: Request, admin_schema: AdminSchema):
                 else:
                     raise
             logger.warning(
-                f"New user {await new_user.to_safe_json()} created by admin {admin_schema.login}"
+                f"New user {await new_user.to_safe_json()} created"
             )
             return CreatedUserSchema(created_user_data=new_user.to_json())  # type: ignore[arg-type]
 
@@ -80,7 +78,7 @@ async def delete_user(request: Request, admin_schema: AdminSchema):
     Requires admin credentials.
     """
     logger.warning(
-        f"Attempting user delete. User: {admin_schema.user_data.name} Admin: {admin_schema.login}"
+        f"Attempting user delete. User: {admin_schema.user_data.name}"
     )
     async with async_session() as session:
         async with session.begin():
@@ -101,15 +99,13 @@ async def delete_user(request: Request, admin_schema: AdminSchema):
             )
             deleted_user = query.unique().scalar_one_or_none()
             if not deleted_user:
-                logger.warning(
-                    f"User {admin_schema.user_data.model_dump()} not found"
-                )
+                logger.warning(f"User {admin_schema.user_data.model_dump()} not found")
                 return JSONResponse(
                     status_code=404,
                     content=IntegrityErrorResponse("User not found").to_json(),
                 )
             logger.warning(
-                f"User {await deleted_user.to_safe_json()} deleted by {admin_schema.login}"
+                f"User {await deleted_user.to_safe_json()} deleted"
             )
             await session.delete(deleted_user)
             await session.commit()

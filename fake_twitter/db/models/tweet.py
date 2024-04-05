@@ -63,7 +63,7 @@ class Tweet(Base):
             "content": self.content,
             "views": self.views,
             "likes": [await like.user.to_safe_json() for like in self.tweet_likes],
-            "reposts": self.reposts_count,
+            # "reposts": self.reposts_count,
             "attachments": [
                 f"{static_request_path}/{image.id}{image.file_extension}"
                 for image in self.images_objects
@@ -86,6 +86,6 @@ class Tweet(Base):
     def likes_count(self):
         return len(self.tweet_likes)
 
-    @hybrid_property
-    def reposts_count(self):
-        return len(self.user_tweet_repost)
+    # @hybrid_property
+    # def reposts_count(self):
+    #     return len(self.user_tweet_repost)

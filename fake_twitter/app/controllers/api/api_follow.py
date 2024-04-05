@@ -42,9 +42,9 @@ async def post_follow_handler(request: Request, followed_id: int):
     Endpoint to follow user by id.
 
     Follower is recognized by api-key header value
-    
+
     User can follow another user only once
-    
+
     <h3>Requires api-key header with valid api key</h3>
     """
     async with async_session() as session:
@@ -117,7 +117,7 @@ async def delete_follow_handler(request: Request, followed_id: int):
     Endpoint to stop following user by id.
 
     Follower is recognized by api-key header value
-    
+
     User can stop following only user he follows
 
     <h3>Requires api-key header with valid api key</h3>
