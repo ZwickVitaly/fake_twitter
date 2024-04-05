@@ -34,7 +34,7 @@ logger = logging.getLogger(logger_name)
 @auth_required_header
 async def post_like_handler(request: Request, tweet_id: int):
     """
-    Endpoint to like tweet by id.
+    Endpoint to post like tweet by id.
 
     User is recognized by api-key header value
 
@@ -88,7 +88,7 @@ async def post_like_handler(request: Request, tweet_id: int):
 @auth_required_header
 async def delete_like_handler(request: Request, tweet_id: int):
     """
-    Endpoint delete tweet like by tweet id.
+    Endpoint to delete tweet like by tweet id.
 
     User is recognized by api-key header value
 

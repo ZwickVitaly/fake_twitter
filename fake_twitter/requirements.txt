@@ -3,4 +3,4 @@ SQLAlchemy
 uvicorn
 asyncpg
 python-multipart
-requests
+

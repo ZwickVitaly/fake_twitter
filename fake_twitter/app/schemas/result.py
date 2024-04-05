@@ -16,9 +16,7 @@ class DefaultPositiveResult(BaseModel):
     Default successful result schema. Used for inheritance and simple response like {"result": true}
     """
 
-    result: bool = Field(
-        default=True,
-    )
+    result: bool = True
 
 
 class ResultMediaSchema(DefaultPositiveResult):
@@ -33,22 +31,22 @@ class ResultTweetCreationSchema(DefaultPositiveResult):
     tweet_id: int
 
 
-class ResultFeedSchema(DefaultPositiveResult):
+class ResultFeedSchema(DefaultPositiveResult, FeedOutSchema):
     """Schema for successful result response adding feed (tweets list)"""
 
-    tweets: FeedOutSchema
+    ...
 
 
-class ResultTweetSchema(ResultFeedSchema):
+class ResultTweetSchema(DefaultPositiveResult):
     """Schema for successful result response adding tweet data"""
 
-    tweet: TweetOutSchema
+    tweet: TweetOutSchema = Field()
 
 
 class BadResultSchema(DefaultPositiveResult):
     """Schema for unsuccessful result response"""
 
-    result: bool = Field(default=False)
+    result: bool = False
     error_type: str
     error_msg: Sequence[Any]
 

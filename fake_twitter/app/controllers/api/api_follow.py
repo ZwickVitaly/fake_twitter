@@ -31,9 +31,8 @@ logger = logging.getLogger(logger_name)
     responses={
         200: {"model": DefaultPositiveResult},
         401: {"model": BadResultSchema},
-        403: {"model": BadResultSchema},
         404: {"model": BadResultSchema},
-        422: {"model": BadResultSchema},
+        409: {"model": BadResultSchema},
     },
 )
 @auth_required_header
@@ -108,7 +107,6 @@ async def post_follow_handler(request: Request, followed_id: int):
     responses={
         200: {"model": DefaultPositiveResult},
         401: {"model": BadResultSchema},
-        422: {"model": BadResultSchema},
     },
 )
 @auth_required_header

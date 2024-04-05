@@ -32,7 +32,6 @@ logger = logging.getLogger(logger_name)
         401: {"model": BadResultSchema},
         404: {"model": BadResultSchema},
         409: {"model": BadResultSchema},
-
     },
 )
 @auth_required_header

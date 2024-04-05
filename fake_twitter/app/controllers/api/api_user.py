@@ -74,8 +74,7 @@ async def get_my_info_handler(request: Request, user_id: Optional[int] = None):
                 .options(
                     selectinload(User.tweets)
                     .options(
-                        selectinload(Tweet.tweet_likes)
-                        .options(selectinload(Like.user))
+                        selectinload(Tweet.tweet_likes).options(selectinload(Like.user))
                     )
                     .options(selectinload(Tweet.user_tweet_repost))
                     .options(selectinload(Tweet.tweet_author))

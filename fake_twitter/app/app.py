@@ -8,8 +8,9 @@ import os
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
-from .config import media_path, static, static_request_path
+from .config import media_path, static_request_path
 from .controllers import (
     api_admin_router,
     api_follows_router,
@@ -22,6 +23,8 @@ from .lifespan import basic_lifespan
 from .schemas import BadResultSchema
 
 app = FastAPI(lifespan=basic_lifespan)
+
+static = StaticFiles(directory=media_path, check_dir=False)
 
 logger = logging.getLogger("uvicorn")
 
@@ -61,6 +64,7 @@ logger.debug("Including routers")
 app.include_router(api_users_router, prefix="/api")
 app.include_router(api_likes_router, prefix="/api")
 app.include_router(api_tweets_router, prefix="/api")
+
 # app.include_router(api_reposts_router, prefix="/api")
 app.include_router(api_follows_router, prefix="/api")
 app.include_router(api_admin_router, prefix="/api")

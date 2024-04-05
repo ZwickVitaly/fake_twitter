@@ -54,9 +54,7 @@ async def create_new_user(request: Request, admin_schema: AdminSchema):
                     )
                 else:
                     raise
-            logger.warning(
-                f"New user {await new_user.to_safe_json()} created"
-            )
+            logger.warning(f"New user {await new_user.to_safe_json()} created")
             return CreatedUserSchema(created_user_data=new_user.to_json())  # type: ignore[arg-type]
 
 
@@ -77,9 +75,7 @@ async def delete_user(request: Request, admin_schema: AdminSchema):
 
     Requires admin credentials.
     """
-    logger.warning(
-        f"Attempting user delete. User: {admin_schema.user_data.name}"
-    )
+    logger.warning(f"Attempting user delete. User: {admin_schema.user_data.name}")
     async with async_session() as session:
         async with session.begin():
             query = await session.execute(
@@ -104,9 +100,7 @@ async def delete_user(request: Request, admin_schema: AdminSchema):
                     status_code=404,
                     content=IntegrityErrorResponse("User not found").to_json(),
                 )
-            logger.warning(
-                f"User {await deleted_user.to_safe_json()} deleted"
-            )
+            logger.warning(f"User {await deleted_user.to_safe_json()} deleted")
             await session.delete(deleted_user)
             await session.commit()
     return DefaultPositiveResult()

@@ -110,9 +110,7 @@ class User(Base):
     @classmethod
     async def get_user_by_id(cls, user_id):
         async with async_session() as session:
-            user = await session.execute(
-                select(cls).filter_by(id=user_id, active=True)
-            )
+            user = await session.execute(select(cls).filter_by(id=user_id, active=True))
         return user.unique().scalar_one_or_none()
 
     @classmethod

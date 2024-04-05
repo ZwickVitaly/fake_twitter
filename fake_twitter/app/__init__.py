@@ -1,5 +1,5 @@
 from .app import app
 
-_all = [
+__all__ = [
     "app",
 ]

@@ -10,7 +10,7 @@ TWEET_BY_ID_API_URL: str = f"{TWEET_API_URL}/{{tweet_id}}"
 
 LIKE_API_URL: str = f"{TWEET_BY_ID_API_URL}/likes"
 
-REPOST_API_URL: str = f"{TWEET_BY_ID_API_URL}/repost"
+# REPOST_API_URL: str = f"{TWEET_BY_ID_API_URL}/repost"
 
 USER_BY_ID_API_URL: str = f"{USER_API_URL}/{{user_id}}"
 
@@ -38,15 +38,22 @@ USER_2: dict = {
 }
 
 USER_3: dict = {
+    "id": 999999999,
     "name": "Hopefully Valid",
-    "api_key": "Definitely Valid"
+    "api_key": "Definitely Valid",
 }
 
-TWEET_1: dict = {"tweet_data": "LOL"}
+TWEET_1: dict = {"tweet_data": "LOL", "tweet_media_ids": []}
 
-TWEET_2: dict = {"tweet_data": "KEK"}
+TWEET_2: dict = {"tweet_data": "KEK", "tweet_media_ids": []}
 
-INVALID_MEDIA_TWEET: dict = {"tweet_data": "KEK", "tweet_media_ids": [-1,]}
+INVALID_TWEET: dict = {
+    "id": 999999999,
+    "tweet_data": "KEK",
+    "tweet_media_ids": [
+        -1,
+    ],
+}
 
 VALID_MEDIA_FILE_PATH = "/tests/valid_image_test.jpeg"
 

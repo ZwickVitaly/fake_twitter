@@ -44,22 +44,6 @@ services:
         condition: service_healthy
 
 
-  tests:
-    image: "fake_twitter_tests"
-    container_name: tests
-    build: tests
-    restart: on-failure
-    environment:
-      - ADMIN_LOGIN=${USER}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - API_KEYWORD=${API_KEYWORD}
-    volumes:
-      - ./app_data/logs/tests:/tests/logs
-    depends_on:
-      fake_twitter:
-        condition: service_started
-
-
   nginx:
       container_name: nginx
       restart: on-failure
@@ -72,5 +56,27 @@ services:
         - ./static:/www/data
         - ./app_data/media:/www/data/static
       depends_on:
-        tests:
-          condition: service_completed_successfully
+        fake_twitter:
+          condition: service_started
+      healthcheck:
+        test: curl --fail http://localhost || exit 1
+        interval: 60s
+        retries: 5
+        start_period: 15s
+        timeout: 10s
+
+
+  tests:
+    image: "fake_twitter_tests"
+    container_name: tests
+    build: tests
+    restart: on-failure
+    environment:
+      - ADMIN_LOGIN=${USER}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - API_KEYWORD=${API_KEYWORD}
+    volumes:
+      - ./app_data/logs/tests:/tests/logs
+    depends_on:
+      nginx:
+        condition: service_healthy

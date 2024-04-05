@@ -22,6 +22,7 @@ from fake_twitter.app.schemas import (
     ResultTweetCreationSchema,
     ResultTweetSchema,
     UnAuthorizedErrorResponse,
+    TweetOutSchema,
 )
 from fake_twitter.db import Follow, Image, Tweet, User, async_session
 
@@ -56,46 +57,46 @@ async def get_feed_handler(request: Request):
             tweets = q.scalars().unique().all()
             tweet_list = [await tweet.to_safe_json() for tweet in tweets]
             logger.debug("Getting all existing tweets")
-            return FeedOutSchema(tweets=tweet_list)  # type: ignore[arg-type]
+            return ResultFeedSchema(tweets=tweet_list)  # type: ignore[arg-type]
 
 
-@api_tweets_router.get(
-    "/feed",
-    responses={
-        200: {"model": ResultFeedSchema},
-        401: {"model": BadResultSchema},
-        422: {"model": BadResultSchema},
-    },
-)
-@auth_required_header
-async def get_personal_feed_handler(request: Request):
-    """
-    Endpoint to get tweets of users, followed by User
-
-    Sorted by: likes amount, views amount, creation date -> e.g. most popular
-
-    User is recognized by api-key header value
-
-    <h3>Requires api-key header with valid api key</h3>
-    """
-    async with async_session() as session:
-        async with session.begin():
-            user = await User.get_user_by_api_token(
-                request.headers.get(api_key_keyword)
-            )
-            q = await session.execute(
-                select(Tweet)
-                .join(User)
-                .join(Follow, User.id == Follow.followed_user)
-                .filter_by(follower_user=user.id)
-                .order_by(Tweet.views.desc())
-                .order_by(Tweet.created_at.desc())
-            )
-            tweets = q.scalars().unique().all()
-            tweet_list = [await t.to_safe_json() for t in tweets]
-            tweet_list.sort(key=lambda x: len(x["likes"]), reverse=True)
-            logger.debug("Getting all tweets of followed users")
-            return {"tweets": tweet_list}
+# @api_tweets_router.get(
+#     "/feed",
+#     responses={
+#         200: {"model": ResultFeedSchema},
+#         401: {"model": BadResultSchema},
+#         422: {"model": BadResultSchema},
+#     },
+# )
+# @auth_required_header
+# async def get_personal_feed_handler(request: Request):
+#     """
+#     Endpoint to get tweets of users, followed by User
+#
+#     Sorted by: likes amount, views amount, creation date -> e.g. most popular
+#
+#     User is recognized by api-key header value
+#
+#     <h3>Requires api-key header with valid api key</h3>
+#     """
+#     async with async_session() as session:
+#         async with session.begin():
+#             user = await User.get_user_by_api_token(
+#                 request.headers.get(api_key_keyword)
+#             )
+#             q = await session.execute(
+#                 select(Tweet)
+#                 .join(User)
+#                 .join(Follow, User.id == Follow.followed_user)
+#                 .filter_by(follower_user=user.id)
+#                 .order_by(Tweet.views.desc())
+#                 .order_by(Tweet.created_at.desc())
+#             )
+#             tweets = q.scalars().unique().all()
+#             tweet_list = [await t.to_safe_json() for t in tweets]
+#             tweet_list.sort(key=lambda x: len(x["likes"]), reverse=True)
+#             logger.debug("Getting all tweets of followed users")
+#             return ResultFeedSchema(tweets=tweet_list)
 
 
 @api_tweets_router.get(
@@ -104,7 +105,6 @@ async def get_personal_feed_handler(request: Request):
         200: {"model": ResultTweetSchema},
         401: {"model": BadResultSchema},
         404: {"model": BadResultSchema},
-        422: {"model": BadResultSchema},
     },
 )
 @auth_required_header
@@ -114,6 +114,11 @@ async def get_tweet_handler(request: Request, tweet_id: int):
 
     Requires api-key header with valid api key
     """
+    if tweet_id > 2**31 - 1:
+        return JSONResponse(
+            status_code=404,
+            content=NotFoundErrorResponse("Jokes on you").to_json(),
+        )
     async with async_session() as session:
         async with session.begin():
             await session.execute(
@@ -129,7 +134,7 @@ async def get_tweet_handler(request: Request, tweet_id: int):
                     status_code=404,
                     content=NotFoundErrorResponse("Tweet not found").to_json(),
                 )
-            return {"tweet": await tweet.to_safe_json()}
+            return ResultTweetSchema(tweet=await tweet.to_safe_json())  # type: ignore[arg-type]
 
 
 @api_tweets_router.post(
@@ -196,7 +201,6 @@ async def post_tweet_handler(request: Request, new_tweet_data: NewTweetSchema):
         401: {"model": BadResultSchema},
         403: {"model": BadResultSchema},
         404: {"model": BadResultSchema},
-        422: {"model": BadResultSchema},
     },
 )
 @auth_required_header
